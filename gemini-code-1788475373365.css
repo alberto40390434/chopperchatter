@@ -1,0 +1,107 @@
+/* General Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Main Chat Container Box */
+.chat-container {
+    width: 100%;
+    max-width: 400px;
+    height: 550px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header Styling */
+.chat-header {
+    background-color: #0084ff;
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+
+/* Messages Scroll Area */
+.chat-window {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #f9f9f9;
+}
+
+/* Individual Message Bubbles */
+.message {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 15px;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+.message.incoming {
+    background-color: #e4e6eb;
+    color: #050505;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+
+.message.outgoing {
+    background-color: #0084ff;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+/* Input Form Area */
+.chat-form {
+    display: flex;
+    padding: 10px;
+    background-color: #ffffff;
+    border-top: 1px solid #ddd;
+}
+
+.chat-form input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #ccd0d5;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
+}
+
+.chat-form input:focus {
+    border-color: #0084ff;
+}
+
+.chat-form button {
+    background-color: #0084ff;
+    color: white;
+    border: none;
+    padding: 0 16px;
+    margin-left: 8px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.chat-form button:hover {
+    background-color: #006dd6;
+}
