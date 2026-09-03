@@ -55,6 +55,7 @@ body {
     word-wrap: break-word;
 }
 
+/* Incoming messages (other people) on the left */
 .message.incoming {
     background-color: #e4e6eb;
     color: #050505;
@@ -62,6 +63,7 @@ body {
     border-bottom-left-radius: 2px;
 }
 
+/* Outgoing messages (you) on the right with a different color */
 .message.outgoing {
     background-color: #0084ff;
     color: white;
