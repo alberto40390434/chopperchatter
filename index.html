@@ -9,24 +9,19 @@
 <body>
 
     <div class="chat-container">
-        <!-- Chat Header -->
         <div class="chat-header">
             <h2>Live Chat Room</h2>
         </div>
 
-        <!-- Chat Messages Area -->
         <div id="chat-window" class="chat-window">
-            <!-- Messages will load here dynamically -->
-        </div>
+            </div>
 
-        <!-- Message Input Form -->
         <form id="chat-form" class="chat-form">
             <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
             <button type="submit">Send</button>
         </form>
     </div>
 
-    <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -47,11 +42,18 @@
         const db = getDatabase(app);
         const messagesRef = ref(db, 'messages');
 
+        // Give this specific browser tab a unique user ID
+        let myUserId = localStorage.getItem('chat_user_id');
+        if (!myUserId) {
+            myUserId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('chat_user_id', myUserId);
+        }
+
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
         const chatWindow = document.getElementById('chat-window');
 
-        // Send message to Realtime Database on form submit
+        // Send message along with the sender's unique ID
         chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const messageText = messageInput.value.trim();
@@ -59,16 +61,27 @@
 
             push(messagesRef, {
                 text: messageText,
+                sender: myUserId,
                 timestamp: Date.now()
             });
             messageInput.value = '';
         });
 
-        // Listen for new messages in real-time
+        // Listen for messages and check if it's yours or someone else's
         onChildAdded(messagesRef, (snapshot) => {
             const data = snapshot.val();
             const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', 'incoming');
+            
+            messageDiv.classList.add('message');
+            
+            // If the sender matches this tab's ID, make it 'outgoing' (right side)
+            // Otherwise, make it 'incoming' (left side)
+            if (data.sender === myUserId) {
+                messageDiv.classList.add('outgoing');
+            } else {
+                messageDiv.classList.add('incoming');
+            }
+
             messageDiv.innerHTML = `<span class="text">${escapeHtml(data.text || '')}</span>`;
             chatWindow.appendChild(messageDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
