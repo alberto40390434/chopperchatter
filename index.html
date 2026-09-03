@@ -4,7 +4,267 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Chat Room</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #f0f2f5;
+        }
+
+        /* Authentication Screen */
+        .auth-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f2f5;
+        }
+
+        .auth-box {
+            width: 100%;
+            max-width: 380px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .auth-box h2 {
+            color: #0084ff;
+            margin-bottom: 5px;
+        }
+
+        .auth-box p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        #auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #auth-form input {
+            padding: 12px;
+            border: 1px solid #ccd0d5;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #auth-form input:focus {
+            border-color: #0084ff;
+        }
+
+        #auth-submit-btn {
+            background-color: #0084ff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        #auth-submit-btn:hover {
+            background-color: #006dd6;
+        }
+
+        .auth-error {
+            color: #ff3b30;
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 16px;
+        }
+
+        .text-btn {
+            background: none;
+            border: none;
+            color: #0084ff;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+
+        .text-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* Full-Screen Chat Layout */
+        .chat-container {
+            width: 100vw;
+            height: 100vh;
+            background: #ffffff;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+        }
+
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border-right: 1px solid #ddd;
+        }
+
+        .chat-header {
+            background-color: #0084ff;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 10px 14px;
+            border-radius: 15px;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+
+        .sender-name {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 3px;
+        }
+
+        .message.incoming {
+            background-color: #e4e6eb;
+            color: #050505;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .message.outgoing {
+            background-color: #0084ff;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-form {
+            display: flex;
+            padding: 15px;
+            background-color: #ffffff;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-form input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ccd0d5;
+            border-radius: 24px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chat-form input:focus {
+            border-color: #0084ff;
+        }
+
+        .chat-form button {
+            background-color: #0084ff;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            margin-left: 10px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .chat-form button:hover {
+            background-color: #006dd6;
+        }
+
+        /* Right Side Online Panel */
+        .online-panel {
+            width: 260px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #eaeaea;
+        }
+
+        .online-panel h3 {
+            padding: 20px 15px 15px 15px;
+            font-size: 16px;
+            color: #333;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        #online-users-list {
+            list-style: none;
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #online-users-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #31a24c;
+            border-radius: 50%;
+        }
+    </style>
 </head>
 <body>
 
@@ -167,12 +427,10 @@
             chatContainer.style.display = 'flex';
             roomTitle.innerText = `Chat Room (${username})`;
 
-            // Track user presence in Firebase
             activeUserRef = ref(db, `online_users/${username}`);
             set(activeUserRef, { online: true });
             onDisconnect(activeUserRef).remove();
 
-            // Listen for active online users
             onValue(ref(db, 'online_users'), (snapshot) => {
                 onlineUsersList.innerHTML = '';
                 snapshot.forEach((childSnapshot) => {
