@@ -8,23 +8,48 @@
 </head>
 <body>
 
-    <div class="chat-container">
+    <!-- Authentication Screen -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-box">
+            <h2>Chopper Chatter</h2>
+            <p id="auth-subtitle">Log in to your account</p>
+            
+            <form id="auth-form">
+                <input type="text" id="auth-username" placeholder="Username" autocomplete="off" required>
+                <input type="password" id="auth-password" placeholder="Password" required>
+                <button type="submit" id="auth-submit-btn">Log In</button>
+            </form>
+            
+            <p id="auth-error" class="auth-error"></p>
+            
+            <button type="button" id="toggle-auth-mode" class="text-btn">Don't have an account? Create one</button>
+        </div>
+    </div>
+
+    <!-- Chat Screen (Hidden by default until logged in) -->
+    <div id="chat-container" class="chat-container" style="display: none;">
+        <!-- Chat Header -->
         <div class="chat-header">
-            <h2>Live Chat Room</h2>
+            <h2 id="room-title">Live Chat Room</h2>
+            <button id="logout-btn" class="logout-btn">Log Out</button>
         </div>
 
+        <!-- Chat Messages Area -->
         <div id="chat-window" class="chat-window">
-            </div>
+            <!-- Messages will load here dynamically -->
+        </div>
 
+        <!-- Message Input Form -->
         <form id="chat-form" class="chat-form">
             <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
             <button type="submit">Send</button>
         </form>
     </div>
 
+    <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -41,19 +66,107 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const messagesRef = ref(db, 'messages');
+        const usersRef = ref(db, 'users');
 
-        // Give this specific browser tab a unique user ID
-        let myUserId = localStorage.getItem('chat_user_id');
-        if (!myUserId) {
-            myUserId = 'user_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('chat_user_id', myUserId);
-        }
-
+        // DOM Elements
+        const authContainer = document.getElementById('auth-container');
+        const chatContainer = document.getElementById('chat-container');
+        const authForm = document.getElementById('auth-form');
+        const authUsernameInput = document.getElementById('auth-username');
+        const authPasswordInput = document.getElementById('auth-password');
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
+        const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
+        const authError = document.getElementById('auth-error');
+        const roomTitle = document.getElementById('room-title');
+        const logoutBtn = document.getElementById('logout-btn');
+        
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
         const chatWindow = document.getElementById('chat-window');
 
-        // Send message along with the sender's unique ID
+        let isCreatingAccount = false;
+
+        // Check if already logged in for this session
+        let currentUser = sessionStorage.getItem('chat_username');
+        if (currentUser) {
+            showChatScreen(currentUser);
+        }
+
+        // Toggle between Login and Create Account mode
+        toggleAuthModeBtn.addEventListener('click', () => {
+            isCreatingAccount = !isCreatingAccount;
+            authError.innerText = '';
+            if (isCreatingAccount) {
+                authSubmitBtn.innerText = 'Create Account';
+                toggleAuthModeBtn.innerText = 'Already have an account? Log in';
+                document.getElementById('auth-subtitle').innerText = 'Register a new account';
+            } else {
+                authSubmitBtn.innerText = 'Log In';
+                toggleAuthModeBtn.innerText = "Don't have an account? Create one";
+                document.getElementById('auth-subtitle').innerText = 'Log in to your account';
+            }
+        });
+
+        // Handle Login / Registration form submission
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = authUsernameInput.value.trim().toLowerCase();
+            const password = authPasswordInput.value.trim();
+
+            if (!username || !password) return;
+
+            const dbRef = ref(db);
+
+            try {
+                const snapshot = await get(child(dbRef, `users/${username}`));
+
+                if (isCreatingAccount) {
+                    // Check if user already exists
+                    if (snapshot.exists()) {
+                        authError.innerText = 'Username is already taken!';
+                        return;
+                    }
+                    // Save new user
+                    await set(ref(db, `users/${username}`), { password: password });
+                    sessionStorage.setItem('chat_username', username);
+                    showChatScreen(username);
+                } else {
+                    // Log In check
+                    if (!snapshot.exists()) {
+                        authError.innerText = 'User does not exist!';
+                        return;
+                    }
+                    const userData = snapshot.val();
+                    if (userData.password !== password) {
+                        authError.innerText = 'Incorrect password!';
+                        return;
+                    }
+                    sessionStorage.setItem('chat_username', username);
+                    showChatScreen(username);
+                }
+            } catch (error) {
+                console.error(error);
+                authError.innerText = 'An error occurred. Try again.';
+            }
+        });
+
+        // Log out handler
+        logoutBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('chat_username');
+            authContainer.style.display = 'flex';
+            chatContainer.style.display = 'none';
+            chatWindow.innerHTML = '';
+            authUsernameInput.value = '';
+            authPasswordInput.value = '';
+        });
+
+        function showChatScreen(username) {
+            authContainer.style.display = 'none';
+            chatContainer.style.display = 'flex';
+            roomTitle.innerText = `Chat Room (${username})`;
+        }
+
+        // Send message along with the username
         chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const messageText = messageInput.value.trim();
@@ -61,28 +174,27 @@
 
             push(messagesRef, {
                 text: messageText,
-                sender: myUserId,
+                sender: sessionStorage.getItem('chat_username'),
                 timestamp: Date.now()
             });
             messageInput.value = '';
         });
 
-        // Listen for messages and check if it's yours or someone else's
+        // Listen for messages and separate them by sender name
         onChildAdded(messagesRef, (snapshot) => {
             const data = snapshot.val();
+            const loggedInUser = sessionStorage.getItem('chat_username');
             const messageDiv = document.createElement('div');
-            
             messageDiv.classList.add('message');
-            
-            // If the sender matches this tab's ID, make it 'outgoing' (right side)
-            // Otherwise, make it 'incoming' (left side)
-            if (data.sender === myUserId) {
+
+            if (data.sender === loggedInUser) {
                 messageDiv.classList.add('outgoing');
+                messageDiv.innerHTML = `<span class="text">${escapeHtml(data.text || '')}</span>`;
             } else {
                 messageDiv.classList.add('incoming');
+                messageDiv.innerHTML = `<span class="sender-name">${escapeHtml(data.sender || 'Unknown')}</span><span class="text">${escapeHtml(data.text || '')}</span>`;
             }
 
-            messageDiv.innerHTML = `<span class="text">${escapeHtml(data.text || '')}</span>`;
             chatWindow.appendChild(messageDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
