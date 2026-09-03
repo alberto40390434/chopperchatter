@@ -6,23 +6,6 @@
     <title>Real-Time Chat Room</title>
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --container-bg: #ffffff;
-            --text-color: #333333;
-            --header-bg: #0084ff;
-            --chat-window-bg: #f9f9f9;
-            --incoming-bg: #e4e6eb;
-            --incoming-text: #050505;
-            --outgoing-bg: #0084ff;
-            --outgoing-text: #ffffff;
-            --border-color: #ddd;
-            --input-bg: #ffffff;
-            --input-text: #333333;
-            --panel-bg: #ffffff;
-            --sender-color: #555;
-        }
-
-        body.dark-mode {
             --bg-color: #18191a;
             --container-bg: #242526;
             --text-color: #e4e6eb;
@@ -37,6 +20,23 @@
             --input-text: #e4e6eb;
             --panel-bg: #242526;
             --sender-color: #b0b3b8;
+        }
+
+        body.light-mode {
+            --bg-color: #f0f2f5;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --header-bg: #0084ff;
+            --chat-window-bg: #f9f9f9;
+            --incoming-bg: #e4e6eb;
+            --incoming-text: #050505;
+            --outgoing-bg: #0084ff;
+            --outgoing-text: #ffffff;
+            --border-color: #ddd;
+            --input-bg: #ffffff;
+            --input-text: #333333;
+            --panel-bg: #ffffff;
+            --sender-color: #555;
         }
 
         * {
@@ -71,7 +71,7 @@
             background: var(--container-bg);
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             text-align: center;
         }
 
@@ -172,12 +172,7 @@
             font-size: 18px;
         }
 
-        .header-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .header-btn {
+        .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: none;
@@ -187,7 +182,7 @@
             font-size: 13px;
         }
 
-        .header-btn:hover {
+        .logout-btn:hover {
             background: rgba(255, 255, 255, 0.3);
         }
 
@@ -269,7 +264,7 @@
             opacity: 0.9;
         }
 
-        /* Right Side Panels */
+        /* Right Side Sidebar */
         .right-sidebar {
             width: 260px;
             background-color: var(--panel-bg);
@@ -316,7 +311,7 @@
             border-radius: 50%;
         }
 
-        /* Settings Panel View */
+        /* Settings View Panel */
         .settings-content {
             padding: 15px;
             display: flex;
@@ -336,23 +331,37 @@
             cursor: pointer;
         }
 
-        /* Bottom Left User Info Footer */
+        /* Bottom Left Footer (Username + Gear Settings Button) */
         .user-footer {
             padding: 12px 15px;
             border-top: 1px solid var(--border-color);
-            font-size: 13px;
-            font-weight: bold;
             background: var(--container-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 13px;
+            font-weight: bold;
         }
 
-        .user-footer-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #31a24c;
-            border-radius: 50%;
+        .gear-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-color);
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .gear-btn:hover {
+            background: var(--incoming-bg);
         }
     </style>
 </head>
@@ -382,10 +391,7 @@
         <div class="chat-main">
             <div class="chat-header">
                 <h2 id="room-title">Live Chat Room</h2>
-                <div class="header-buttons">
-                    <button id="settings-toggle-btn" class="header-btn">Settings</button>
-                    <button id="logout-btn" class="header-btn">Log Out</button>
-                </div>
+                <button id="logout-btn" class="logout-btn">Log Out</button>
             </div>
 
             <div id="chat-window" class="chat-window">
@@ -398,7 +404,7 @@
             </form>
         </div>
 
-        <!-- Right Side Panel (Online Users or Settings) -->
+        <!-- Right Side Sidebar -->
         <div class="right-sidebar">
             <!-- Online Users View -->
             <div id="online-panel-view" class="panel-section">
@@ -412,15 +418,18 @@
                 <div class="settings-content">
                     <div class="setting-item">
                         <label for="dark-mode-toggle">Dark Mode</label>
-                        <input type="checkbox" id="dark-mode-toggle">
+                        <input type="checkbox" id="dark-mode-toggle" checked>
                     </div>
                 </div>
             </div>
 
-            <!-- Bottom Left Username Footer -->
+            <!-- Bottom Left Username & Gear Button Footer -->
             <div class="user-footer">
-                <div class="user-footer-dot"></div>
-                <span id="footer-username">User</span>
+                <div class="user-info">
+                    <div class="status-dot"></div>
+                    <span id="footer-username">User</span>
+                </div>
+                <button id="gear-settings-btn" class="gear-btn" title="Settings">⚙️</button>
             </div>
         </div>
     </div>
@@ -462,7 +471,7 @@
         const footerUsername = document.getElementById('footer-username');
 
         // Settings Elements
-        const settingsToggleBtn = document.getElementById('settings-toggle-btn');
+        const gearSettingsBtn = document.getElementById('gear-settings-btn');
         const onlinePanelView = document.getElementById('online-panel-view');
         const settingsPanelView = document.getElementById('settings-panel-view');
         const darkModeToggle = document.getElementById('dark-mode-toggle');
@@ -471,32 +480,32 @@
         let activeUserRef = null;
         let showingSettings = false;
 
-        // Load saved theme preference
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
+        // Default Theme is Dark Mode (Check saved preference or default to checked)
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            darkModeToggle.checked = false;
+        } else {
             darkModeToggle.checked = true;
         }
 
         darkModeToggle.addEventListener('change', () => {
             if (darkModeToggle.checked) {
-                document.body.classList.add('dark-mode');
+                document.body.classList.remove('light-mode');
                 localStorage.setItem('theme', 'dark');
             } else {
-                document.body.classList.remove('dark-mode');
+                document.body.classList.add('light-mode');
                 localStorage.setItem('theme', 'light');
             }
         });
 
-        settingsToggleBtn.addEventListener('click', () => {
+        gearSettingsBtn.addEventListener('click', () => {
             showingSettings = !showingSettings;
             if (showingSettings) {
                 onlinePanelView.style.display = 'none';
                 settingsPanelView.style.display = 'flex';
-                settingsToggleBtn.innerText = 'Chat';
             } else {
                 settingsPanelView.style.display = 'none';
                 onlinePanelView.style.display = 'flex';
-                settingsToggleBtn.innerText = 'Settings';
             }
         });
 
