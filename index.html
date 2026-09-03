@@ -181,17 +181,104 @@
             height: 100vh;
             background: var(--container-bg);
             display: flex;
-            flex-direction: row;
+            flex-direction: row; /* Sidebar on left, main chat on right */
             overflow: hidden;
             position: relative;
         }
 
+        /* Left Side Sidebar */
+        .left-sidebar {
+            width: 260px;
+            background-color: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .panel-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-bottom: 50px; /* Space for footer */
+        }
+
+        .panel-section h3 {
+            padding: 20px 15px 15px 15px;
+            font-size: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #online-users-list {
+            list-style: none;
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #online-users-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #31a24c;
+            border-radius: 50%;
+        }
+
+        /* Bottom Left Corner Footer Area */
+        .chat-footer-area {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            background-color: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .gear-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-color);
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .gear-btn:hover {
+            background: var(--incoming-bg);
+            transform: rotate(45deg);
+        }
+
+        /* Right Side: Main Chat Area */
         .chat-main {
             flex: 1;
             display: flex;
             flex-direction: column;
             height: 100%;
-            border-right: 1px solid var(--border-color);
         }
 
         .chat-header {
@@ -297,94 +384,6 @@
 
         .chat-form button:hover {
             opacity: 0.9;
-        }
-
-        /* Right Side Sidebar */
-        .right-sidebar {
-            width: 260px;
-            background-color: var(--panel-bg);
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid var(--border-color);
-            position: relative;
-        }
-
-        .panel-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            /* Leave room at bottom for the fixed corner footer */
-            padding-bottom: 50px; 
-        }
-
-        .panel-section h3 {
-            padding: 20px 15px 15px 15px;
-            font-size: 16px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        #online-users-list {
-            list-style: none;
-            padding: 15px;
-            overflow-y: auto;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        #online-users-list li {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #31a24c;
-            border-radius: 50%;
-        }
-
-        /* Corner Footer Area (Sits strictly in the bottom-left of the right sidebar) */
-        .chat-footer-area {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            background-color: var(--panel-bg);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .gear-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            color: var(--text-color);
-            padding: 4px;
-            border-radius: 4px;
-            transition: background 0.2s, transform 0.2s;
-        }
-
-        .gear-btn:hover {
-            background: var(--incoming-bg);
-            transform: rotate(45deg);
         }
 
         /* Modal Blur Effect background container */
@@ -498,7 +497,24 @@
 
     <!-- Full-Screen Chat Layout -->
     <div id="chat-container" class="chat-container" style="display: none;">
-        <!-- Left Side: Main Chat Area -->
+        <!-- Left Side Sidebar -->
+        <div class="left-sidebar">
+            <div class="panel-section">
+                <h3>Online Users</h3>
+                <ul id="online-users-list"></ul>
+            </div>
+
+            <!-- Corner Footer Area (Bottom Left) -->
+            <div class="chat-footer-area">
+                <div class="user-info">
+                    <div class="status-dot"></div>
+                    <span id="footer-username">User</span>
+                </div>
+                <button id="gear-settings-btn" class="gear-btn" title="Settings">⚙️</button>
+            </div>
+        </div>
+
+        <!-- Right Side: Main Chat Area -->
         <div class="chat-main">
             <div class="chat-header">
                 <h2 id="room-title">Live Chat Room</h2>
@@ -513,23 +529,6 @@
                 <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
                 <button type="submit">Send</button>
             </form>
-        </div>
-
-        <!-- Right Side Sidebar -->
-        <div class="right-sidebar">
-            <div class="panel-section">
-                <h3>Online Users</h3>
-                <ul id="online-users-list"></ul>
-            </div>
-
-            <!-- Corner Footer Area (Anchored to the bottom of the right sidebar) -->
-            <div class="chat-footer-area">
-                <div class="user-info">
-                    <div class="status-dot"></div>
-                    <span id="footer-username">User</span>
-                </div>
-                <button id="gear-settings-btn" class="gear-btn" title="Settings">⚙️</button>
-            </div>
         </div>
     </div>
 
