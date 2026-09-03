@@ -14,6 +14,81 @@ body {
     height: 100vh;
 }
 
+/* Authentication Screen Box */
+.auth-container {
+    width: 100%;
+    max-width: 380px;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.auth-box h2 {
+    color: #0084ff;
+    margin-bottom: 5px;
+}
+
+.auth-box p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+#auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#auth-form input {
+    padding: 12px;
+    border: 1px solid #ccd0d5;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+}
+
+#auth-form input:focus {
+    border-color: #0084ff;
+}
+
+#auth-submit-btn {
+    background-color: #0084ff;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+#auth-submit-btn:hover {
+    background-color: #006dd6;
+}
+
+.auth-error {
+    color: #ff3b30;
+    font-size: 13px;
+    margin-top: 10px;
+    min-height: 16px;
+}
+
+.text-btn {
+    background: none;
+    border: none;
+    color: #0084ff;
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 15px;
+}
+
+.text-btn:hover {
+    text-decoration: underline;
+}
+
 /* Main Chat Container Box */
 .chat-container {
     width: 100%;
@@ -32,7 +107,27 @@ body {
     background-color: #0084ff;
     color: white;
     padding: 15px;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header h2 {
+    font-size: 16px;
+}
+
+.logout-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* Messages Scroll Area */
@@ -55,6 +150,14 @@ body {
     word-wrap: break-word;
 }
 
+.sender-name {
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 3px;
+}
+
 /* Incoming messages (other people) on the left */
 .message.incoming {
     background-color: #e4e6eb;
@@ -63,7 +166,7 @@ body {
     border-bottom-left-radius: 2px;
 }
 
-/* Outgoing messages (you) on the right with a different color */
+/* Outgoing messages (you) on the right */
 .message.outgoing {
     background-color: #0084ff;
     color: white;
