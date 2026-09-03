@@ -22,7 +22,7 @@
             --sender-color: #b0b3b8;
         }
 
-        body.light-mode {
+        body.theme-light {
             --bg-color: #f0f2f5;
             --container-bg: #ffffff;
             --text-color: #333333;
@@ -37,6 +37,40 @@
             --input-text: #333333;
             --panel-bg: #ffffff;
             --sender-color: #555;
+        }
+
+        body.theme-purple {
+            --bg-color: #120822;
+            --container-bg: #1e1136;
+            --text-color: #f3e8ff;
+            --header-bg: #8b5cf6;
+            --chat-window-bg: #120822;
+            --incoming-bg: #2d1b4e;
+            --incoming-text: #f3e8ff;
+            --outgoing-bg: #8b5cf6;
+            --outgoing-text: #ffffff;
+            --border-color: #3b2365;
+            --input-bg: #2d1b4e;
+            --input-text: #f3e8ff;
+            --panel-bg: #1e1136;
+            --sender-color: #c4b5fd;
+        }
+
+        body.theme-emerald {
+            --bg-color: #061a14;
+            --container-bg: #0b2920;
+            --text-color: #ecfdf5;
+            --header-bg: #059669;
+            --chat-window-bg: #061a14;
+            --incoming-bg: #113c2f;
+            --incoming-text: #ecfdf5;
+            --outgoing-bg: #059669;
+            --outgoing-text: #ffffff;
+            --border-color: #1b4d3e;
+            --input-bg: #113c2f;
+            --input-text: #ecfdf5;
+            --panel-bg: #0b2920;
+            --sender-color: #6ee7b7;
         }
 
         * {
@@ -149,6 +183,7 @@
             display: flex;
             flex-direction: row;
             overflow: hidden;
+            position: relative;
         }
 
         .chat-main {
@@ -226,6 +261,40 @@
             border-bottom-right-radius: 2px;
         }
 
+        /* Bottom Left Footer Area (Username + Gear Settings Button) */
+        .chat-footer-area {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: var(--container-bg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .gear-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-color);
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .gear-btn:hover {
+            background: var(--incoming-bg);
+            transform: rotate(45deg);
+        }
+
         .chat-form {
             display: flex;
             padding: 15px;
@@ -264,14 +333,13 @@
             opacity: 0.9;
         }
 
-        /* Right Side Sidebar */
+        /* Right Side Sidebar (Online Users) */
         .right-sidebar {
             width: 260px;
             background-color: var(--panel-bg);
             display: flex;
             flex-direction: column;
             border-left: 1px solid var(--border-color);
-            position: relative;
         }
 
         .panel-section {
@@ -311,57 +379,92 @@
             border-radius: 50%;
         }
 
-        /* Settings View Panel */
-        .settings-content {
-            padding: 15px;
+        /* Modal Blur Effect background container */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Growing Settings Modal Box */
+        .settings-modal {
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            width: 90%;
+            max-width: 400px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transform: scale(0.7);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
 
-        .setting-item {
+        .modal-backdrop.active .settings-modal {
+            transform: scale(1);
+        }
+
+        .settings-modal h3 {
+            font-size: 18px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .settings-group {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-        }
-
-        .setting-item input[type="checkbox"] {
-            transform: scale(1.2);
-            cursor: pointer;
-        }
-
-        /* Bottom Left Footer (Username + Gear Settings Button) */
-        .user-footer {
-            padding: 12px 15px;
-            border-top: 1px solid var(--border-color);
-            background: var(--container-bg);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 8px;
+        }
+
+        .settings-group label {
             font-size: 13px;
             font-weight: bold;
+            color: var(--sender-color);
         }
 
-        .gear-btn {
-            background: none;
-            border: none;
+        .settings-group select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--input-text);
+            font-size: 14px;
+            outline: none;
             cursor: pointer;
-            font-size: 18px;
-            color: var(--text-color);
-            padding: 4px;
-            border-radius: 4px;
-            transition: background 0.2s;
         }
 
-        .gear-btn:hover {
-            background: var(--incoming-bg);
+        .modal-close-btn {
+            background-color: var(--header-bg);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .modal-close-btn:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
@@ -402,35 +505,42 @@
                 <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
                 <button type="submit">Send</button>
             </form>
-        </div>
-
-        <!-- Right Side Sidebar -->
-        <div class="right-sidebar">
-            <!-- Online Users View -->
-            <div id="online-panel-view" class="panel-section">
-                <h3>Online Users</h3>
-                <ul id="online-users-list"></ul>
-            </div>
-
-            <!-- Settings View (Hidden by default) -->
-            <div id="settings-panel-view" class="panel-section" style="display: none;">
-                <h3>Settings</h3>
-                <div class="settings-content">
-                    <div class="setting-item">
-                        <label for="dark-mode-toggle">Dark Mode</label>
-                        <input type="checkbox" id="dark-mode-toggle" checked>
-                    </div>
-                </div>
-            </div>
 
             <!-- Bottom Left Username & Gear Button Footer -->
-            <div class="user-footer">
+            <div class="chat-footer-area">
                 <div class="user-info">
                     <div class="status-dot"></div>
                     <span id="footer-username">User</span>
                 </div>
                 <button id="gear-settings-btn" class="gear-btn" title="Settings">⚙️</button>
             </div>
+        </div>
+
+        <!-- Right Side Sidebar (Online Users) -->
+        <div class="right-sidebar">
+            <div class="panel-section">
+                <h3>Online Users</h3>
+                <ul id="online-users-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal Backdrop & Popup (Grows from center, blurs background) -->
+    <div id="settings-backdrop" class="modal-backdrop">
+        <div class="settings-modal">
+            <h3>Settings</h3>
+            
+            <div class="settings-group">
+                <label for="theme-select">Select Theme</label>
+                <select id="theme-select">
+                    <option value="dark">Dark Mode (Default)</option>
+                    <option value="light">Light Mode</option>
+                    <option value="purple">Midnight Purple</option>
+                    <option value="emerald">Emerald Green</option>
+                </select>
+            </div>
+
+            <button id="close-modal-btn" class="modal-close-btn">Done</button>
         </div>
     </div>
 
@@ -472,40 +582,48 @@
 
         // Settings Elements
         const gearSettingsBtn = document.getElementById('gear-settings-btn');
-        const onlinePanelView = document.getElementById('online-panel-view');
-        const settingsPanelView = document.getElementById('settings-panel-view');
-        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const settingsBackdrop = document.getElementById('settings-backdrop');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const themeSelect = document.getElementById('theme-select');
 
         let isCreatingAccount = false;
         let activeUserRef = null;
-        let showingSettings = false;
 
-        // Default Theme is Dark Mode (Check saved preference or default to checked)
-        if (localStorage.getItem('theme') === 'light') {
-            document.body.classList.add('light-mode');
-            darkModeToggle.checked = false;
-        } else {
-            darkModeToggle.checked = true;
-        }
+        // Load saved theme (Default to dark)
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+        themeSelect.value = savedTheme;
 
-        darkModeToggle.addEventListener('change', () => {
-            if (darkModeToggle.checked) {
-                document.body.classList.remove('light-mode');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.body.classList.add('light-mode');
-                localStorage.setItem('theme', 'light');
-            }
+        themeSelect.addEventListener('change', (e) => {
+            const selectedTheme = e.target.value;
+            applyTheme(selectedTheme);
+            localStorage.setItem('theme', selectedTheme);
         });
 
+        function applyTheme(theme) {
+            document.body.className = ''; // clear existing themes
+            if (theme === 'light') {
+                document.body.classList.add('theme-light');
+            } else if (theme === 'purple') {
+                document.body.classList.add('theme-purple');
+            } else if (theme === 'emerald') {
+                document.body.classList.add('theme-emerald');
+            }
+            // 'dark' uses base root variables
+        }
+
         gearSettingsBtn.addEventListener('click', () => {
-            showingSettings = !showingSettings;
-            if (showingSettings) {
-                onlinePanelView.style.display = 'none';
-                settingsPanelView.style.display = 'flex';
-            } else {
-                settingsPanelView.style.display = 'none';
-                onlinePanelView.style.display = 'flex';
+            settingsBackdrop.classList.add('active');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            settingsBackdrop.classList.remove('active');
+        });
+
+        // Close modal if clicking outside the content box
+        settingsBackdrop.addEventListener('click', (e) => {
+            if (e.target === settingsBackdrop) {
+                settingsBackdrop.classList.remove('active');
             }
         });
 
