@@ -5,6 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Chat Room</title>
     <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --header-bg: #0084ff;
+            --chat-window-bg: #f9f9f9;
+            --incoming-bg: #e4e6eb;
+            --incoming-text: #050505;
+            --outgoing-bg: #0084ff;
+            --outgoing-text: #ffffff;
+            --border-color: #ddd;
+            --input-bg: #ffffff;
+            --input-text: #333333;
+            --panel-bg: #ffffff;
+            --sender-color: #555;
+        }
+
+        body.dark-mode {
+            --bg-color: #18191a;
+            --container-bg: #242526;
+            --text-color: #e4e6eb;
+            --header-bg: #2d88ff;
+            --chat-window-bg: #18191a;
+            --incoming-bg: #3a3b3c;
+            --incoming-text: #e4e6eb;
+            --outgoing-bg: #2d88ff;
+            --outgoing-text: #ffffff;
+            --border-color: #393a3b;
+            --input-bg: #3a3b3c;
+            --input-text: #e4e6eb;
+            --panel-bg: #242526;
+            --sender-color: #b0b3b8;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -16,7 +50,9 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #f0f2f5;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background 0.3s, color 0.3s;
         }
 
         /* Authentication Screen */
@@ -26,13 +62,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #f0f2f5;
+            background: var(--bg-color);
         }
 
         .auth-box {
             width: 100%;
             max-width: 380px;
-            background: #ffffff;
+            background: var(--container-bg);
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -40,12 +76,12 @@
         }
 
         .auth-box h2 {
-            color: #0084ff;
+            color: var(--header-bg);
             margin-bottom: 5px;
         }
 
         .auth-box p {
-            color: #666;
+            color: var(--sender-color);
             font-size: 14px;
             margin-bottom: 20px;
         }
@@ -58,18 +94,20 @@
 
         #auth-form input {
             padding: 12px;
-            border: 1px solid #ccd0d5;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--input-text);
             border-radius: 6px;
             font-size: 14px;
             outline: none;
         }
 
         #auth-form input:focus {
-            border-color: #0084ff;
+            border-color: var(--header-bg);
         }
 
         #auth-submit-btn {
-            background-color: #0084ff;
+            background-color: var(--header-bg);
             color: white;
             border: none;
             padding: 12px;
@@ -80,7 +118,7 @@
         }
 
         #auth-submit-btn:hover {
-            background-color: #006dd6;
+            opacity: 0.9;
         }
 
         .auth-error {
@@ -93,7 +131,7 @@
         .text-btn {
             background: none;
             border: none;
-            color: #0084ff;
+            color: var(--header-bg);
             cursor: pointer;
             font-size: 13px;
             margin-top: 15px;
@@ -107,7 +145,7 @@
         .chat-container {
             width: 100vw;
             height: 100vh;
-            background: #ffffff;
+            background: var(--container-bg);
             display: flex;
             flex-direction: row;
             overflow: hidden;
@@ -118,11 +156,11 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            border-right: 1px solid #ddd;
+            border-right: 1px solid var(--border-color);
         }
 
         .chat-header {
-            background-color: #0084ff;
+            background-color: var(--header-bg);
             color: white;
             padding: 15px 20px;
             display: flex;
@@ -134,7 +172,12 @@
             font-size: 18px;
         }
 
-        .logout-btn {
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: none;
@@ -144,7 +187,7 @@
             font-size: 13px;
         }
 
-        .logout-btn:hover {
+        .header-btn:hover {
             background: rgba(255, 255, 255, 0.3);
         }
 
@@ -155,7 +198,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            background-color: #f9f9f9;
+            background-color: var(--chat-window-bg);
         }
 
         .message {
@@ -170,20 +213,20 @@
             display: block;
             font-size: 11px;
             font-weight: bold;
-            color: #555;
+            color: var(--sender-color);
             margin-bottom: 3px;
         }
 
         .message.incoming {
-            background-color: #e4e6eb;
-            color: #050505;
+            background-color: var(--incoming-bg);
+            color: var(--incoming-text);
             align-self: flex-start;
             border-bottom-left-radius: 2px;
         }
 
         .message.outgoing {
-            background-color: #0084ff;
-            color: white;
+            background-color: var(--outgoing-bg);
+            color: var(--outgoing-text);
             align-self: flex-end;
             border-bottom-right-radius: 2px;
         }
@@ -191,25 +234,27 @@
         .chat-form {
             display: flex;
             padding: 15px;
-            background-color: #ffffff;
-            border-top: 1px solid #ddd;
+            background-color: var(--container-bg);
+            border-top: 1px solid var(--border-color);
         }
 
         .chat-form input {
             flex: 1;
             padding: 12px 16px;
-            border: 1px solid #ccd0d5;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--input-text);
             border-radius: 24px;
             outline: none;
             font-size: 14px;
         }
 
         .chat-form input:focus {
-            border-color: #0084ff;
+            border-color: var(--header-bg);
         }
 
         .chat-form button {
-            background-color: #0084ff;
+            background-color: var(--header-bg);
             color: white;
             border: none;
             padding: 0 20px;
@@ -221,23 +266,30 @@
         }
 
         .chat-form button:hover {
-            background-color: #006dd6;
+            opacity: 0.9;
         }
 
-        /* Right Side Online Panel */
-        .online-panel {
+        /* Right Side Panels */
+        .right-sidebar {
             width: 260px;
-            background-color: #ffffff;
+            background-color: var(--panel-bg);
             display: flex;
             flex-direction: column;
-            border-left: 1px solid #eaeaea;
+            border-left: 1px solid var(--border-color);
+            position: relative;
         }
 
-        .online-panel h3 {
+        .panel-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-section h3 {
             padding: 20px 15px 15px 15px;
             font-size: 16px;
-            color: #333;
-            border-bottom: 1px solid #eaeaea;
+            border-bottom: 1px solid var(--border-color);
         }
 
         #online-users-list {
@@ -255,10 +307,48 @@
             align-items: center;
             gap: 8px;
             font-size: 14px;
-            color: #333;
         }
 
         .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #31a24c;
+            border-radius: 50%;
+        }
+
+        /* Settings Panel View */
+        .settings-content {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .setting-item input[type="checkbox"] {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        /* Bottom Left User Info Footer */
+        .user-footer {
+            padding: 12px 15px;
+            border-top: 1px solid var(--border-color);
+            font-size: 13px;
+            font-weight: bold;
+            background: var(--container-bg);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-footer-dot {
             width: 8px;
             height: 8px;
             background-color: #31a24c;
@@ -286,13 +376,16 @@
         </div>
     </div>
 
-    <!-- Full-Screen Chat Layout (Hidden by default until logged in) -->
+    <!-- Full-Screen Chat Layout -->
     <div id="chat-container" class="chat-container" style="display: none;">
         <!-- Left Side: Main Chat Area -->
         <div class="chat-main">
             <div class="chat-header">
                 <h2 id="room-title">Live Chat Room</h2>
-                <button id="logout-btn" class="logout-btn">Log Out</button>
+                <div class="header-buttons">
+                    <button id="settings-toggle-btn" class="header-btn">Settings</button>
+                    <button id="logout-btn" class="header-btn">Log Out</button>
+                </div>
             </div>
 
             <div id="chat-window" class="chat-window">
@@ -305,12 +398,30 @@
             </form>
         </div>
 
-        <!-- Right Side: Online Users Panel -->
-        <div class="online-panel">
-            <h3>Online Users</h3>
-            <ul id="online-users-list">
-                <!-- Active users load here -->
-            </ul>
+        <!-- Right Side Panel (Online Users or Settings) -->
+        <div class="right-sidebar">
+            <!-- Online Users View -->
+            <div id="online-panel-view" class="panel-section">
+                <h3>Online Users</h3>
+                <ul id="online-users-list"></ul>
+            </div>
+
+            <!-- Settings View (Hidden by default) -->
+            <div id="settings-panel-view" class="panel-section" style="display: none;">
+                <h3>Settings</h3>
+                <div class="settings-content">
+                    <div class="setting-item">
+                        <label for="dark-mode-toggle">Dark Mode</label>
+                        <input type="checkbox" id="dark-mode-toggle">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Left Username Footer -->
+            <div class="user-footer">
+                <div class="user-footer-dot"></div>
+                <span id="footer-username">User</span>
+            </div>
         </div>
     </div>
 
@@ -348,9 +459,46 @@
         const messageInput = document.getElementById('message-input');
         const chatWindow = document.getElementById('chat-window');
         const onlineUsersList = document.getElementById('online-users-list');
+        const footerUsername = document.getElementById('footer-username');
+
+        // Settings Elements
+        const settingsToggleBtn = document.getElementById('settings-toggle-btn');
+        const onlinePanelView = document.getElementById('online-panel-view');
+        const settingsPanelView = document.getElementById('settings-panel-view');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
 
         let isCreatingAccount = false;
         let activeUserRef = null;
+        let showingSettings = false;
+
+        // Load saved theme preference
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        settingsToggleBtn.addEventListener('click', () => {
+            showingSettings = !showingSettings;
+            if (showingSettings) {
+                onlinePanelView.style.display = 'none';
+                settingsPanelView.style.display = 'flex';
+                settingsToggleBtn.innerText = 'Chat';
+            } else {
+                settingsPanelView.style.display = 'none';
+                onlinePanelView.style.display = 'flex';
+                settingsToggleBtn.innerText = 'Settings';
+            }
+        });
 
         let currentUser = sessionStorage.getItem('chat_username');
         if (currentUser) {
@@ -426,6 +574,7 @@
             authContainer.style.display = 'none';
             chatContainer.style.display = 'flex';
             roomTitle.innerText = `Chat Room (${username})`;
+            footerUsername.innerText = username;
 
             activeUserRef = ref(db, `online_users/${username}`);
             set(activeUserRef, { online: true });
