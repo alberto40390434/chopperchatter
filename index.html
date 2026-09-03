@@ -29,7 +29,7 @@
     <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -44,40 +44,33 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
+        const messagesRef = ref(db, 'messages');
 
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
         const chatWindow = document.getElementById('chat-window');
 
-        // Send message to Firestore on form submit
-        chatForm.addEventListener('submit', async function(e) {
+        // Send message to Realtime Database on form submit
+        chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const messageText = messageInput.value.trim();
             if (messageText === '') return;
 
-            try {
-                await addDoc(collection(db, "messages"), {
-                    text: messageText,
-                    createdAt: serverTimestamp()
-                });
-                messageInput.value = '';
-            } catch (error) {
-                console.error("Error sending message: ", error);
-            }
+            push(messagesRef, {
+                text: messageText,
+                timestamp: Date.now()
+            });
+            messageInput.value = '';
         });
 
-        // Listen for real-time updates from Firestore
-        const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
-        onSnapshot(q, (snapshot) => {
-            chatWindow.innerHTML = ''; 
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', 'incoming');
-                messageDiv.innerHTML = `<span class="text">${escapeHtml(data.text || '')}</span>`;
-                chatWindow.appendChild(messageDiv);
-            });
+        // Listen for new messages in real-time
+        onChildAdded(messagesRef, (snapshot) => {
+            const data = snapshot.val();
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'incoming');
+            messageDiv.innerHTML = `<span class="text">${escapeHtml(data.text || '')}</span>`;
+            chatWindow.appendChild(messageDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
 
