@@ -26,32 +26,39 @@
         </div>
     </div>
 
-    <!-- Chat Screen (Hidden by default until logged in) -->
+    <!-- Full-Screen Chat Layout (Hidden by default until logged in) -->
     <div id="chat-container" class="chat-container" style="display: none;">
-        <!-- Chat Header -->
-        <div class="chat-header">
-            <h2 id="room-title">Live Chat Room</h2>
-            <button id="logout-btn" class="logout-btn">Log Out</button>
+        <!-- Left Side: Main Chat Area -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <h2 id="room-title">Live Chat Room</h2>
+                <button id="logout-btn" class="logout-btn">Log Out</button>
+            </div>
+
+            <div id="chat-window" class="chat-window">
+                <!-- Messages load here -->
+            </div>
+
+            <form id="chat-form" class="chat-form">
+                <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
+                <button type="submit">Send</button>
+            </form>
         </div>
 
-        <!-- Chat Messages Area -->
-        <div id="chat-window" class="chat-window">
-            <!-- Messages will load here dynamically -->
+        <!-- Right Side: Online Users Panel -->
+        <div class="online-panel">
+            <h3>Online Users</h3>
+            <ul id="online-users-list">
+                <!-- Active users load here -->
+            </ul>
         </div>
-
-        <!-- Message Input Form -->
-        <form id="chat-form" class="chat-form">
-            <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
-            <button type="submit">Send</button>
-        </form>
     </div>
 
     <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child, push, onChildAdded, onValue, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBZgVq1OUZX4Hv6on-SflRZEGgqyrhpCzc",
             authDomain: "chopperchatter.firebaseapp.com",
@@ -62,13 +69,10 @@
             measurementId: "G-F1P35FVF0C"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const messagesRef = ref(db, 'messages');
-        const usersRef = ref(db, 'users');
 
-        // DOM Elements
         const authContainer = document.getElementById('auth-container');
         const chatContainer = document.getElementById('chat-container');
         const authForm = document.getElementById('auth-form');
@@ -83,16 +87,16 @@
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
         const chatWindow = document.getElementById('chat-window');
+        const onlineUsersList = document.getElementById('online-users-list');
 
         let isCreatingAccount = false;
+        let activeUserRef = null;
 
-        // Check if already logged in for this session
         let currentUser = sessionStorage.getItem('chat_username');
         if (currentUser) {
             showChatScreen(currentUser);
         }
 
-        // Toggle between Login and Create Account mode
         toggleAuthModeBtn.addEventListener('click', () => {
             isCreatingAccount = !isCreatingAccount;
             authError.innerText = '';
@@ -107,7 +111,6 @@
             }
         });
 
-        // Handle Login / Registration form submission
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = authUsernameInput.value.trim().toLowerCase();
@@ -121,17 +124,14 @@
                 const snapshot = await get(child(dbRef, `users/${username}`));
 
                 if (isCreatingAccount) {
-                    // Check if user already exists
                     if (snapshot.exists()) {
                         authError.innerText = 'Username is already taken!';
                         return;
                     }
-                    // Save new user
                     await set(ref(db, `users/${username}`), { password: password });
                     sessionStorage.setItem('chat_username', username);
                     showChatScreen(username);
                 } else {
-                    // Log In check
                     if (!snapshot.exists()) {
                         authError.innerText = 'User does not exist!';
                         return;
@@ -150,8 +150,10 @@
             }
         });
 
-        // Log out handler
         logoutBtn.addEventListener('click', () => {
+            if (activeUserRef) {
+                remove(activeUserRef);
+            }
             sessionStorage.removeItem('chat_username');
             authContainer.style.display = 'flex';
             chatContainer.style.display = 'none';
@@ -164,9 +166,24 @@
             authContainer.style.display = 'none';
             chatContainer.style.display = 'flex';
             roomTitle.innerText = `Chat Room (${username})`;
+
+            // Track user presence in Firebase
+            activeUserRef = ref(db, `online_users/${username}`);
+            set(activeUserRef, { online: true });
+            onDisconnect(activeUserRef).remove();
+
+            // Listen for active online users
+            onValue(ref(db, 'online_users'), (snapshot) => {
+                onlineUsersList.innerHTML = '';
+                snapshot.forEach((childSnapshot) => {
+                    const userName = childSnapshot.key;
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="status-dot"></span> ${escapeHtml(userName)}`;
+                    onlineUsersList.appendChild(li);
+                });
+            });
         }
 
-        // Send message along with the username
         chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const messageText = messageInput.value.trim();
@@ -180,7 +197,6 @@
             messageInput.value = '';
         });
 
-        // Listen for messages and separate them by sender name
         onChildAdded(messagesRef, (snapshot) => {
             const data = snapshot.val();
             const loggedInUser = sessionStorage.getItem('chat_username');
@@ -199,7 +215,6 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
 
-        // Security helper to prevent HTML injection
         function escapeHtml(text) {
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
