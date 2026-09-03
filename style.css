@@ -12,6 +12,8 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
 /* Authentication Screen Box */
@@ -89,41 +91,47 @@ body {
     text-decoration: underline;
 }
 
-/* Main Chat Container Box */
+/* Full-Screen Chat Layout Container */
 .chat-container {
-    width: 100%;
-    max-width: 400px;
-    height: 550px;
+    width: 100vw;
+    height: 100vh;
     background: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* Left Main Chat Side */
+.chat-main {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    height: 100%;
+    border-right: 1px solid #ddd;
 }
 
 /* Header Styling */
 .chat-header {
     background-color: #0084ff;
     color: white;
-    padding: 15px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .chat-header h2 {
-    font-size: 16px;
+    font-size: 18px;
 }
 
 .logout-btn {
     background: rgba(255, 255, 255, 0.2);
     color: white;
     border: none;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .logout-btn:hover {
@@ -133,17 +141,17 @@ body {
 /* Messages Scroll Area */
 .chat-window {
     flex: 1;
-    padding: 15px;
+    padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     background-color: #f9f9f9;
 }
 
 /* Individual Message Bubbles */
 .message {
-    max-width: 75%;
+    max-width: 65%;
     padding: 10px 14px;
     border-radius: 15px;
     font-size: 14px;
@@ -158,7 +166,6 @@ body {
     margin-bottom: 3px;
 }
 
-/* Incoming messages (other people) on the left */
 .message.incoming {
     background-color: #e4e6eb;
     color: #050505;
@@ -166,7 +173,6 @@ body {
     border-bottom-left-radius: 2px;
 }
 
-/* Outgoing messages (you) on the right */
 .message.outgoing {
     background-color: #0084ff;
     color: white;
@@ -177,16 +183,16 @@ body {
 /* Input Form Area */
 .chat-form {
     display: flex;
-    padding: 10px;
+    padding: 15px;
     background-color: #ffffff;
     border-top: 1px solid #ddd;
 }
 
 .chat-form input {
     flex: 1;
-    padding: 10px 14px;
+    padding: 12px 16px;
     border: 1px solid #ccd0d5;
-    border-radius: 20px;
+    border-radius: 24px;
     outline: none;
     font-size: 14px;
 }
@@ -199,9 +205,9 @@ body {
     background-color: #0084ff;
     color: white;
     border: none;
-    padding: 0 16px;
-    margin-left: 8px;
-    border-radius: 20px;
+    padding: 0 20px;
+    margin-left: 10px;
+    border-radius: 24px;
     cursor: pointer;
     font-weight: bold;
     transition: background 0.2s;
@@ -209,4 +215,45 @@ body {
 
 .chat-form button:hover {
     background-color: #006dd6;
+}
+
+/* Right Side: Online Panel */
+.online-panel {
+    width: 260px;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #eaeaea;
+}
+
+.online-panel h3 {
+    padding: 20px 15px 15px 15px;
+    font-size: 16px;
+    color: #333;
+    border-bottom: 1px solid #eaeaea;
+}
+
+#online-users-list {
+    list-style: none;
+    padding: 15px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#online-users-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #31a24c;
+    border-radius: 50%;
 }
