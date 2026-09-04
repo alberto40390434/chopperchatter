@@ -208,6 +208,9 @@
             padding: 20px 15px 15px 15px;
             font-size: 16px;
             border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         #online-users-list {
@@ -223,8 +226,14 @@
         #online-users-list li {
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
             font-size: 14px;
+        }
+
+        .user-left-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .status-dot {
@@ -232,6 +241,20 @@
             height: 8px;
             background-color: #31a24c;
             border-radius: 50%;
+        }
+
+        .kick-btn {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .kick-btn:hover {
+            opacity: 0.8;
         }
 
         /* Bottom Left Corner Footer Area */
@@ -294,6 +317,22 @@
             font-size: 18px;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .admin-badge {
+            background: #ffcc00;
+            color: #000;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: none;
+        }
+
         .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
@@ -324,6 +363,28 @@
             border-radius: 15px;
             font-size: 14px;
             word-wrap: break-word;
+            position: relative;
+        }
+
+        .message-content-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .delete-msg-btn {
+            background: none;
+            border: none;
+            color: inherit;
+            opacity: 0.6;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 0 4px;
+        }
+
+        .delete-msg-btn:hover {
+            opacity: 1;
         }
 
         .sender-name {
@@ -459,6 +520,29 @@
             cursor: pointer;
         }
 
+        .admin-controls-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .admin-action-btn {
+            background-color: #ff3b30;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .admin-action-btn:hover {
+            opacity: 0.9;
+        }
+
         .modal-close-btn {
             background-color: var(--header-bg);
             color: white;
@@ -497,7 +581,7 @@
 
     <!-- Full-Screen Chat Layout -->
     <div id="chat-container" class="chat-container" style="display: none;">
-        <!-- Left Side Sidebar with Online Users Panel restored -->
+        <!-- Left Side Sidebar -->
         <div class="left-sidebar">
             <div class="panel-section">
                 <h3>Online Users</h3>
@@ -518,7 +602,10 @@
         <div class="chat-main">
             <div class="chat-header">
                 <h2 id="room-title">Live Chat Room</h2>
-                <button id="logout-btn" class="logout-btn">Log Out</button>
+                <div class="header-actions">
+                    <span id="admin-badge" class="admin-badge">ADMIN</span>
+                    <button id="logout-btn" class="logout-btn">Log Out</button>
+                </div>
             </div>
 
             <div id="chat-window" class="chat-window">
@@ -526,7 +613,7 @@
             </div>
 
             <form id="chat-form" class="chat-form">
-                <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
+                <input type="text" id="message-input" placeholder="Type a message or /admin [password]..." autocomplete="off" required>
                 <button type="submit">Send</button>
             </form>
         </div>
@@ -547,6 +634,12 @@
                 </select>
             </div>
 
+            <!-- Admin Panel Section (Visible only if user enters admin password command) -->
+            <div id="admin-panel-section" class="admin-controls-box" style="display: none;">
+                <label>Admin Panel Controls</label>
+                <button id="clear-all-chat-btn" class="admin-action-btn">Clear Entire Chat History</button>
+            </div>
+
             <button id="close-modal-btn" class="modal-close-btn">Done</button>
         </div>
     </div>
@@ -554,7 +647,7 @@
     <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, push, onChildAdded, onValue, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child, push, onChildAdded, onValue, remove, onDisconnect, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBZgVq1OUZX4Hv6on-SflRZEGgqyrhpCzc",
@@ -580,6 +673,7 @@
         const authError = document.getElementById('auth-error');
         const roomTitle = document.getElementById('room-title');
         const logoutBtn = document.getElementById('logout-btn');
+        const adminBadge = document.getElementById('admin-badge');
         
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
@@ -587,14 +681,18 @@
         const onlineUsersList = document.getElementById('online-users-list');
         const footerUsername = document.getElementById('footer-username');
 
-        // Settings Elements
+        // Settings & Admin Elements
         const gearSettingsBtn = document.getElementById('gear-settings-btn');
         const settingsBackdrop = document.getElementById('settings-backdrop');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const themeSelect = document.getElementById('theme-select');
+        const adminPanelSection = document.getElementById('admin-panel-section');
+        const clearAllChatBtn = document.getElementById('clear-all-chat-btn');
 
         let isCreatingAccount = false;
         let activeUserRef = null;
+        let isAdmin = false;
+        const ADMIN_PASSWORD = 'A082613t1';
 
         // Load saved theme
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -695,6 +793,9 @@
                 remove(activeUserRef);
             }
             sessionStorage.removeItem('chat_username');
+            isAdmin = false;
+            adminBadge.style.display = 'none';
+            adminPanelSection.style.display = 'none';
             authContainer.style.display = 'flex';
             chatContainer.style.display = 'none';
             chatWindow.innerHTML = '';
@@ -712,12 +813,39 @@
             set(activeUserRef, { online: true });
             onDisconnect(activeUserRef).remove();
 
+            // Listen for kicks targeting this user
+            const kickRef = ref(db, `kicked_users/${username}`);
+            onValue(kickRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    alert('You have been kicked by an admin.');
+                    remove(kickRef);
+                    logoutBtn.click();
+                }
+            });
+
             onValue(ref(db, 'online_users'), (snapshot) => {
                 onlineUsersList.innerHTML = '';
                 snapshot.forEach((childSnapshot) => {
                     const userName = childSnapshot.key;
                     const li = document.createElement('li');
-                    li.innerHTML = `<span class="status-dot"></span> ${escapeHtml(userName)}`;
+                    
+                    const leftGroup = document.createElement('div');
+                    leftGroup.className = 'user-left-group';
+                    leftGroup.innerHTML = `<span class="status-dot"></span> ${escapeHtml(userName)}`;
+                    li.appendChild(leftGroup);
+
+                    // If current user is admin and the listed user isn't themself, show Kick button
+                    if (isAdmin && userName !== username) {
+                        const kickBtn = document.createElement('button');
+                        kickBtn.className = 'kick-btn';
+                        kickBtn.innerText = 'Kick';
+                        kickBtn.onclick = () => {
+                            set(ref(db, `kicked_users/${userName}`), true);
+                            remove(ref(db, `online_users/${userName}`));
+                        };
+                        li.appendChild(kickBtn);
+                    }
+
                     onlineUsersList.appendChild(li);
                 });
             });
@@ -728,6 +856,21 @@
             const messageText = messageInput.value.trim();
             if (messageText === '') return;
 
+            // Check if the user is typing the admin command: /admin A082613t1
+            if (messageText.startsWith('/admin ')) {
+                const passwordAttempt = messageText.substring(7).trim();
+                if (passwordAttempt === ADMIN_PASSWORD) {
+                    isAdmin = true;
+                    adminBadge.style.display = 'inline-block';
+                    adminPanelSection.style.display = 'flex';
+                    alert('Admin privileges granted successfully!');
+                } else {
+                    alert('Incorrect admin password.');
+                }
+                messageInput.value = '';
+                return;
+            }
+
             push(messagesRef, {
                 text: messageText,
                 sender: sessionStorage.getItem('chat_username'),
@@ -736,22 +879,71 @@
             messageInput.value = '';
         });
 
+        // Admin action: Clear all messages
+        clearAllChatBtn.addEventListener('click', () => {
+            if (isAdmin) {
+                if (confirm('Are you sure you want to delete all chat history?')) {
+                    remove(messagesRef);
+                    settingsBackdrop.classList.remove('active');
+                }
+            }
+        });
+
+        // Listen for complete clearing of chat history
+        onValue(messagesRef, (snapshot) => {
+            if (!snapshot.exists()) {
+                chatWindow.innerHTML = '';
+            }
+        });
+
         onChildAdded(messagesRef, (snapshot) => {
             const data = snapshot.val();
+            if (!data) return;
+            const messageId = snapshot.key;
             const loggedInUser = sessionStorage.getItem('chat_username');
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
+            messageDiv.setAttribute('data-id', messageId);
+
+            let deleteButtonHtml = '';
+            if (isAdmin) {
+                deleteButtonHtml = `<button class="delete-msg-btn" onclick="deleteMessage('${messageId}')" title="Delete message">🗑️</button>`;
+            }
 
             if (data.sender === loggedInUser) {
                 messageDiv.classList.add('outgoing');
-                messageDiv.innerHTML = `<span class="text">${escapeHtml(data.text || '')}</span>`;
+                messageDiv.innerHTML = `
+                    <div class="message-content-wrapper">
+                        <span class="text">${escapeHtml(data.text || '')}</span>
+                        ${deleteButtonHtml}
+                    </div>
+                `;
             } else {
                 messageDiv.classList.add('incoming');
-                messageDiv.innerHTML = `<span class="sender-name">${escapeHtml(data.sender || 'Unknown')}</span><span class="text">${escapeHtml(data.text || '')}</span>`;
+                messageDiv.innerHTML = `
+                    <span class="sender-name">${escapeHtml(data.sender || 'Unknown')}</span>
+                    <div class="message-content-wrapper">
+                        <span class="text">${escapeHtml(data.text || '')}</span>
+                        ${deleteButtonHtml}
+                    </div>
+                `;
             }
 
             chatWindow.appendChild(messageDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
+        });
+
+        // Global function for admin message deletion
+        window.deleteMessage = function(id) {
+            if (isAdmin) {
+                remove(ref(db, `messages/${id}`));
+            }
+        };
+
+        onChildRemoved(messagesRef, (snapshot) => {
+            const deletedId = snapshot.key;
+            const el = chatWindow.querySelector(`[data-id="${deletedId}"]`);
+            if (el) el.remove();
         });
 
         function escapeHtml(text) {
