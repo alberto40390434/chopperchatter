@@ -338,11 +338,11 @@
             padding: 6px;
             border-radius: 4px;
             transition: background 0.2s, transform 0.2s;
-            display: none; /* Hidden by default until secure admin login */
+            display: none;
         }
 
         .gear-btn {
-            display: block; /* Settings gear is always visible */
+            display: block;
         }
 
         .gear-btn:hover, .admin-panel-toggle-btn:hover {
@@ -514,7 +514,7 @@
             opacity: 0.9;
         }
 
-        /* Modal Blur Effect background container */
+        /* Modal Backdrop */
         .modal-backdrop {
             position: fixed;
             top: 0;
@@ -801,7 +801,7 @@
     <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, push, onChildAdded, onValue, remove, portal, onDisconnect, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child, push, onValue, remove, onDisconnect, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBZgVq1OUZX4Hv6on-SflRZEGgqyrhpCzc",
@@ -868,7 +868,7 @@
         let slowmodeSeconds = 0;
         let isChannelLocked = false;
 
-        // Load saved theme
+        // Load saved theme immediately on startup
         const savedTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(savedTheme);
         themeSelect.value = savedTheme;
@@ -918,10 +918,10 @@
             }
         });
 
-        let currentUser = sessionStorage.getItem('chat_username');
+        // Use localStorage so logins and settings stay active across sessions
+        let currentUser = localStorage.getItem('chat_username');
         if (currentUser) {
-            // Check if stored session was authenticated as admin previously
-            if (sessionStorage.getItem('is_admin') === 'true') {
+            if (localStorage.getItem('is_admin') === 'true') {
                 isAdmin = true;
             }
             showChatScreen(currentUser);
@@ -948,13 +948,12 @@
 
             if (!username || !password) return;
 
-            // Check if password matches the hidden admin credential string
             if (password === ADMIN_PASSWORD) {
                 isAdmin = true;
-                sessionStorage.setItem('is_admin', 'true');
+                localStorage.setItem('is_admin', 'true');
             } else {
                 isAdmin = false;
-                sessionStorage.removeItem('is_admin');
+                localStorage.removeItem('is_admin');
             }
 
             const dbRef = ref(db);
@@ -968,7 +967,7 @@
                         return;
                     }
                     await set(ref(db, `users/${username}`), { password: password });
-                    sessionStorage.setItem('chat_username', username);
+                    localStorage.setItem('chat_username', username);
                     showChatScreen(username);
                 } else {
                     if (!snapshot.exists()) {
@@ -980,7 +979,7 @@
                         authError.innerText = 'Incorrect password!';
                         return;
                     }
-                    sessionStorage.setItem('chat_username', username);
+                    localStorage.setItem('chat_username', username);
                     showChatScreen(username);
                 }
             } catch (error) {
@@ -993,8 +992,8 @@
             if (activeUserRef) {
                 remove(activeUserRef);
             }
-            sessionStorage.removeItem('chat_username');
-            sessionStorage.removeItem('is_admin');
+            localStorage.removeItem('chat_username');
+            localStorage.removeItem('is_admin');
             isAdmin = false;
             adminBadge.style.display = 'none';
             adminPanelToggleBtn.style.display = 'none';
@@ -1022,7 +1021,6 @@
             set(activeUserRef, { online: true });
             onDisconnect(activeUserRef).remove();
 
-            // Listen for kicks targeting this user
             const kickRef = ref(db, `kicked_users/${username}`);
             onValue(kickRef, (snapshot) => {
                 if (snapshot.exists()) {
@@ -1032,7 +1030,6 @@
                 }
             });
 
-            // Initialize default general channel if missing
             get(child(ref(db), 'channels/general')).then((snapshot) => {
                 if (!snapshot.exists()) {
                     set(ref(db, 'channels/general'), { slowmode: 0, lockdown: false });
@@ -1101,7 +1098,6 @@
             currentChannelSlowmodeRef = ref(db, `channels/${channelName}/slowmode`);
             currentChannelLockdownRef = ref(db, `channels/${channelName}/lockdown`);
 
-            // Listen to slowmode changes
             onValue(currentChannelSlowmodeRef, (snapshot) => {
                 slowmodeSeconds = snapshot.val() || 0;
                 slowmodeSecondsInput.value = slowmodeSeconds;
@@ -1113,7 +1109,6 @@
                 }
             });
 
-            // Listen to lockdown changes
             onValue(currentChannelLockdownRef, (snapshot) => {
                 isChannelLocked = snapshot.val() === true;
                 lockdownSelect.value = isChannelLocked ? "true" : "false";
@@ -1123,7 +1118,6 @@
                 }
             });
 
-            // Load existing messages
             onValue(currentChannelMessagesRef, (snapshot) => {
                 chatWindow.innerHTML = '';
                 if (!snapshot.exists()) return;
@@ -1167,13 +1161,11 @@
             const messageText = messageInput.value.trim();
             if (messageText === '') return;
 
-            // Check if channel is locked down
             if (isChannelLocked && !isAdmin) {
                 alert('This channel is locked down. Only administrators can send messages.');
                 return;
             }
 
-            // Check slowmode enforcement for non-admin users
             if (slowmodeSeconds > 0 && !isAdmin) {
                 const now = Date.now();
                 const elapsedSeconds = (now - lastMessageTimestamp) / 1000;
@@ -1187,13 +1179,12 @@
 
             push(currentChannelMessagesRef, {
                 text: messageText,
-                sender: sessionStorage.getItem('chat_username'),
+                sender: localStorage.getItem('chat_username'),
                 timestamp: Date.now()
             });
             messageInput.value = '';
         });
 
-        // Extended Admin actions from modal controls
         createChannelBtn.addEventListener('click', () => {
             if (!isAdmin) return;
             const chanName = newChannelNameInput.value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
@@ -1254,7 +1245,7 @@
 
         function appendMessageToDOM(messageId, data) {
             if (!data) return;
-            const loggedInUser = sessionStorage.getItem('chat_username');
+            const loggedInUser = localStorage.getItem('chat_username');
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
             messageDiv.setAttribute('data-id', messageId);
