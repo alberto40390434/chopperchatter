@@ -655,7 +655,6 @@
 </head>
 <body>
 
-    <!-- Authentication Screen -->
     <div id="auth-container" class="auth-container">
         <div class="auth-box">
             <h2>Chopper Chatter</h2>
@@ -673,23 +672,19 @@
         </div>
     </div>
 
-    <!-- Full-Screen Chat Layout -->
     <div id="chat-container" class="chat-container" style="display: none;">
-        <!-- Left Side Sidebar -->
         <div class="left-sidebar">
             <div class="channels-header">
                 <span>Channels</span>
             </div>
             <ul id="channels-list">
-                <!-- Dynamic Channels list -->
-            </ul>
+                </ul>
 
             <div class="panel-section">
                 <h3>Online Users</h3>
                 <ul id="online-users-list"></ul>
             </div>
 
-            <!-- Corner Footer Area (Bottom Left) -->
             <div class="chat-footer-area">
                 <div class="user-info">
                     <div class="status-dot"></div>
@@ -702,7 +697,6 @@
             </div>
         </div>
 
-        <!-- Right Side: Main Chat Area -->
         <div class="chat-main">
             <div class="chat-header">
                 <h2 id="room-title">#general</h2>
@@ -713,19 +707,17 @@
             </div>
 
             <div id="chat-window" class="chat-window">
-                <!-- Messages load here -->
-            </div>
+                </div>
 
             <div id="slowmode-notice" class="slowmode-notice">Slowmode is active. Please wait before sending another message.</div>
 
             <form id="chat-form" class="chat-form">
-                <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
+                <input type="text" id="message-input" placeholder="Type a message or /admin [password]" autocomplete="off" required>
                 <button type="submit">Send</button>
             </form>
         </div>
     </div>
 
-    <!-- Settings Modal Backdrop & Popup -->
     <div id="settings-backdrop" class="modal-backdrop">
         <div class="settings-modal">
             <h3>Settings</h3>
@@ -744,12 +736,10 @@
         </div>
     </div>
 
-    <!-- Admin Panel Modal Backdrop & Popup -->
     <div id="admin-modal-backdrop" class="modal-backdrop">
         <div class="admin-modal">
             <h3>Extended Admin Management Panel</h3>
             
-            <!-- Channel Management -->
             <div class="admin-section-box">
                 <label>Manage Channels</label>
                 <div class="row-group">
@@ -758,7 +748,6 @@
                 </div>
             </div>
 
-            <!-- Slowmode Configuration -->
             <div class="admin-section-box">
                 <label>Manage Slowmode (Current Channel)</label>
                 <div class="row-group">
@@ -767,7 +756,6 @@
                 </div>
             </div>
 
-            <!-- Announcement Broadcast System -->
             <div class="admin-section-box">
                 <label>Send Global Announcement</label>
                 <div class="row-group">
@@ -776,7 +764,6 @@
                 </div>
             </div>
 
-            <!-- Lockdown Mode -->
             <div class="admin-section-box">
                 <label>Channel Lockdown (Disable Chat for Members)</label>
                 <div class="row-group">
@@ -788,7 +775,6 @@
                 </div>
             </div>
 
-            <!-- Clear Channel History -->
             <div class="admin-section-box">
                 <label>Danger Zone</label>
                 <button id="clear-channel-chat-btn" class="admin-action-btn">Clear Current Channel History</button>
@@ -798,7 +784,6 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, get, child, push, onValue, remove, onDisconnect, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -857,7 +842,7 @@
 
         let isCreatingAccount = false;
         let activeUserRef = null;
-        let isAdmin = false;
+        let isAdmin = false; // Starts false on every reload/update session
         const ADMIN_PASSWORD = 'A082613t1';
 
         let currentChannel = 'general';
@@ -918,12 +903,9 @@
             }
         });
 
-        // Use localStorage so logins and settings stay active across sessions
+        // Username session persists, but admin status clears on refresh/reload
         let currentUser = localStorage.getItem('chat_username');
         if (currentUser) {
-            if (localStorage.getItem('is_admin') === 'true') {
-                isAdmin = true;
-            }
             showChatScreen(currentUser);
         }
 
@@ -947,14 +929,6 @@
             const password = authPasswordInput.value.trim();
 
             if (!username || !password) return;
-
-            if (password === ADMIN_PASSWORD) {
-                isAdmin = true;
-                localStorage.setItem('is_admin', 'true');
-            } else {
-                isAdmin = false;
-                localStorage.removeItem('is_admin');
-            }
 
             const dbRef = ref(db);
 
@@ -993,7 +967,6 @@
                 remove(activeUserRef);
             }
             localStorage.removeItem('chat_username');
-            localStorage.removeItem('is_admin');
             isAdmin = false;
             adminBadge.style.display = 'none';
             adminPanelToggleBtn.style.display = 'none';
@@ -1009,13 +982,8 @@
             chatContainer.style.display = 'flex';
             footerUsername.innerText = username;
 
-            if (isAdmin) {
-                adminBadge.style.display = 'inline-block';
-                adminPanelToggleBtn.style.display = 'block';
-            } else {
-                adminBadge.style.display = 'none';
-                adminPanelToggleBtn.style.display = 'none';
-            }
+            // Update UI based on current session's admin state
+            updateAdminUI();
 
             activeUserRef = ref(db, `online_users/${username}`);
             set(activeUserRef, { online: true });
@@ -1039,6 +1007,16 @@
             loadChannels();
             loadOnlineUsers(username);
             switchChannel('general');
+        }
+
+        function updateAdminUI() {
+            if (isAdmin) {
+                adminBadge.style.display = 'inline-block';
+                adminPanelToggleBtn.style.display = 'block';
+            } else {
+                adminBadge.style.display = 'none';
+                adminPanelToggleBtn.style.display = 'none';
+            }
         }
 
         function loadChannels() {
@@ -1160,6 +1138,21 @@
             e.preventDefault();
             const messageText = messageInput.value.trim();
             if (messageText === '') return;
+
+            // Check if user is typing the admin command: /admin [password]
+            if (messageText.startsWith('/admin ')) {
+                const enteredPassword = messageText.substring(7).trim();
+                if (enteredPassword === ADMIN_PASSWORD) {
+                    isAdmin = true;
+                    updateAdminUI();
+                    loadChannels(); // Refresh channel list to show delete buttons if applicable
+                    alert('Admin access granted for this session!');
+                } else {
+                    alert('Incorrect admin password!');
+                }
+                messageInput.value = '';
+                return;
+            }
 
             if (isChannelLocked && !isAdmin) {
                 alert('This channel is locked down. Only administrators can send messages.');
