@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Chat Room</title>
+    <script crossorigin src="https://unpkg.com/@daily-co/daily-js"></script>
     <style>
         :root {
             --bg-color: #18191a;
@@ -390,6 +391,25 @@
             display: none;
         }
 
+        .video-call-btn {
+            background: #31a24c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: opacity 0.2s;
+        }
+
+        .video-call-btn:hover {
+            opacity: 0.9;
+        }
+
         .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
@@ -765,6 +785,7 @@
                 <h2 id="room-title">#general</h2>
                 <div class="header-actions">
                     <span id="admin-badge" class="admin-badge">ADMIN</span>
+                    <button id="video-call-btn" class="video-call-btn" title="Start Video Call">📹 Join Call</button>
                     <button id="logout-btn" class="logout-btn">Log Out</button>
                 </div>
             </div>
@@ -1027,7 +1048,7 @@
         const footerUsername = document.getElementById('footer-username');
         const slowmodeNotice = document.getElementById('slowmode-notice');
 
-        // Settings & Admin Elements
+        // Settings, Admin & Video Call Elements
         const gearSettingsBtn = document.getElementById('gear-settings-btn');
         const settingsBackdrop = document.getElementById('settings-backdrop');
         const closeModalBtn = document.getElementById('close-modal-btn');
@@ -1036,6 +1057,7 @@
         const adminPanelToggleBtn = document.getElementById('admin-panel-toggle-btn');
         const adminModalBackdrop = document.getElementById('admin-modal-backdrop');
         const closeAdminModalBtn = document.getElementById('close-admin-modal-btn');
+        const videoCallBtn = document.getElementById('video-call-btn');
 
         let isCreatingAccount = false;
         let activeUserRef = null;
@@ -1049,6 +1071,7 @@
         let lastMessageTimestamp = 0;
         let slowmodeSeconds = 0;
         let isChannelLocked = false;
+        let callFrame = null;
 
         // Multi-Panel & Keyboard Navigation State
         let currentActivePanel = 1;
@@ -1104,6 +1127,35 @@
             }
         });
 
+        // Daily.co Video Call Integration
+        videoCallBtn.addEventListener('click', () => {
+            if (!callFrame) {
+                const frameContainer = document.createElement('div');
+                frameContainer.id = 'daily-frame-container';
+                frameContainer.style.position = 'fixed';
+                frameContainer.style.top = '0';
+                frameContainer.style.left = '0';
+                frameContainer.style.width = '100vw';
+                frameContainer.style.height = '100vh';
+                frameContainer.style.zIndex = '2000';
+                frameContainer.style.background = 'rgba(0,0,0,0.8)';
+                document.body.appendChild(frameContainer);
+
+                callFrame = window.DailyIFrame.createFrame(frameContainer, {
+                    showLeaveButton: true,
+                    theme: 'dark'
+                });
+
+                callFrame.join({ url: 'https://schoolchats.daily.co/general' });
+
+                callFrame.on('left-meeting', () => {
+                    callFrame.destroy();
+                    callFrame = null;
+                    frameContainer.remove();
+                });
+            }
+        });
+
         // Tab click switching
         const tabButtons = document.querySelectorAll('.admin-tab-btn');
         tabButtons.forEach(btn => {
@@ -1145,7 +1197,6 @@
                 currentActivePanel = currentActivePanel <= 1 ? 4 : currentActivePanel - 1;
                 switchPanelTab(currentActivePanel);
             } else if (e.key === 'Enter') {
-                // If focus is not already on an input field, trigger the selected item's primary action
                 if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
                     e.preventDefault();
                     const actionBtn = items[selectedCommandIndex].querySelector('button');
@@ -1179,7 +1230,6 @@
             });
         }
 
-        // Global function attached to dynamic administrative buttons
         window.executeAdminAction = async function(panelId, commandIndex) {
             if (!isAdmin) return;
 
@@ -1327,7 +1377,6 @@
             }
         };
 
-        // REMOVED AUTO-LOGIN: Users must type their username and password every single time.
         localStorage.removeItem('chat_username');
 
         toggleAuthModeBtn.addEventListener('click', () => {
@@ -1557,7 +1606,6 @@
             const messageText = messageInput.value.trim();
             if (messageText === '') return;
 
-            // Check if user is typing the admin command: /admin [password]
             if (messageText.startsWith('/admin ')) {
                 const enteredPassword = messageText.substring(7).trim();
                 if (enteredPassword === ADMIN_PASSWORD) {
