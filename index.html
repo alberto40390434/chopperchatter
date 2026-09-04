@@ -196,6 +196,49 @@
             position: relative;
         }
 
+        .channels-header {
+            padding: 15px;
+            font-size: 15px;
+            font-weight: bold;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #channels-list {
+            list-style: none;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 180px;
+            overflow-y: auto;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #channels-list li {
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--sender-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #channels-list li:hover {
+            background-color: var(--incoming-bg);
+            color: var(--text-color);
+        }
+
+        #channels-list li.active {
+            background-color: var(--header-bg);
+            color: white;
+            font-weight: bold;
+        }
+
         .panel-section {
             flex: 1;
             display: flex;
@@ -205,8 +248,8 @@
         }
 
         .panel-section h3 {
-            padding: 20px 15px 15px 15px;
-            font-size: 16px;
+            padding: 15px;
+            font-size: 15px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
@@ -280,20 +323,34 @@
             font-weight: bold;
         }
 
-        .gear-btn {
+        .footer-icons {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .gear-btn, .admin-panel-toggle-btn {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
             color: var(--text-color);
-            padding: 4px;
+            padding: 6px;
             border-radius: 4px;
             transition: background 0.2s, transform 0.2s;
+            display: none; /* Hidden by default until admin logs in */
         }
 
-        .gear-btn:hover {
+        .gear-btn {
+            display: block; /* Settings gear is always visible */
+        }
+
+        .gear-btn:hover, .admin-panel-toggle-btn:hover {
             background: var(--incoming-bg);
-            transform: rotate(45deg);
+        }
+
+        .admin-panel-toggle-btn {
+            color: #ffcc00;
         }
 
         /* Right Side: Main Chat Area */
@@ -409,6 +466,16 @@
             border-bottom-right-radius: 2px;
         }
 
+        .slowmode-notice {
+            text-align: center;
+            font-size: 12px;
+            color: #ff3b30;
+            padding: 5px;
+            background: var(--container-bg);
+            border-top: 1px solid var(--border-color);
+            display: none;
+        }
+
         .chat-form {
             display: flex;
             padding: 15px;
@@ -471,12 +538,12 @@
             pointer-events: auto;
         }
 
-        /* Growing Settings Modal Box */
-        .settings-modal {
+        /* Modal Boxes */
+        .settings-modal, .admin-modal {
             background: var(--container-bg);
             border: 1px solid var(--border-color);
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
@@ -487,14 +554,16 @@
             gap: 20px;
         }
 
-        .modal-backdrop.active .settings-modal {
+        .modal-backdrop.active .settings-modal,
+        .modal-backdrop.active .admin-modal {
             transform: scale(1);
         }
 
-        .settings-modal h3 {
+        .settings-modal h3, .admin-modal h3 {
             font-size: 18px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
+            color: var(--header-bg);
         }
 
         .settings-group {
@@ -509,7 +578,7 @@
             color: var(--sender-color);
         }
 
-        .settings-group select {
+        .settings-group select, .admin-modal input {
             padding: 10px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
@@ -517,15 +586,29 @@
             color: var(--input-text);
             font-size: 14px;
             outline: none;
-            cursor: pointer;
         }
 
-        .admin-controls-box {
+        .admin-section-box {
             display: flex;
             flex-direction: column;
             gap: 10px;
             border-top: 1px solid var(--border-color);
             padding-top: 15px;
+        }
+
+        .admin-section-box label {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--sender-color);
+        }
+
+        .row-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .row-group input {
+            flex: 1;
         }
 
         .admin-action-btn {
@@ -537,6 +620,10 @@
             font-weight: bold;
             cursor: pointer;
             text-align: center;
+        }
+
+        .admin-action-btn.secondary {
+            background-color: var(--header-bg);
         }
 
         .admin-action-btn:hover {
@@ -556,6 +643,11 @@
 
         .modal-close-btn:hover {
             opacity: 0.9;
+        }
+
+        .modal-subtext {
+            font-size: 12px;
+            color: var(--sender-color);
         }
     </style>
 </head>
@@ -583,6 +675,13 @@
     <div id="chat-container" class="chat-container" style="display: none;">
         <!-- Left Side Sidebar -->
         <div class="left-sidebar">
+            <div class="channels-header">
+                <span>Channels</span>
+            </div>
+            <ul id="channels-list">
+                <!-- Dynamic Channels list -->
+            </ul>
+
             <div class="panel-section">
                 <h3>Online Users</h3>
                 <ul id="online-users-list"></ul>
@@ -594,14 +693,17 @@
                     <div class="status-dot"></div>
                     <span id="footer-username">User</span>
                 </div>
-                <button id="gear-settings-btn" class="gear-btn" title="Settings">⚙️</button>
+                <div class="footer-icons">
+                    <button id="admin-panel-toggle-btn" class="admin-panel-toggle-btn" title="Admin Panel">🛡️</button>
+                    <button id="gear-settings-btn" class="gear-btn" title="Settings">⚙️</button>
+                </div>
             </div>
         </div>
 
         <!-- Right Side: Main Chat Area -->
         <div class="chat-main">
             <div class="chat-header">
-                <h2 id="room-title">Live Chat Room</h2>
+                <h2 id="room-title">#general</h2>
                 <div class="header-actions">
                     <span id="admin-badge" class="admin-badge">ADMIN</span>
                     <button id="logout-btn" class="logout-btn">Log Out</button>
@@ -612,8 +714,10 @@
                 <!-- Messages load here -->
             </div>
 
+            <div id="slowmode-notice" class="slowmode-notice">Slowmode is active. Please wait before sending another message.</div>
+
             <form id="chat-form" class="chat-form">
-                <input type="text" id="message-input" placeholder="Type a message or /admin [password]..." autocomplete="off" required>
+                <input type="text" id="message-input" placeholder="Type a message or /admin A082613t1..." autocomplete="off" required>
                 <button type="submit">Send</button>
             </form>
         </div>
@@ -634,13 +738,41 @@
                 </select>
             </div>
 
-            <!-- Admin Panel Section (Visible only if user enters admin password command) -->
-            <div id="admin-panel-section" class="admin-controls-box" style="display: none;">
-                <label>Admin Panel Controls</label>
-                <button id="clear-all-chat-btn" class="admin-action-btn">Clear Entire Chat History</button>
+            <button id="close-modal-btn" class="modal-close-btn">Done</button>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal Backdrop & Popup -->
+    <div id="admin-modal-backdrop" class="modal-backdrop">
+        <div class="admin-modal">
+            <h3>Admin Management Panel</h3>
+            
+            <!-- Channel Management -->
+            <div class="admin-section-box">
+                <label>Manage Channels</label>
+                <div class="row-group">
+                    <input type="text" id="new-channel-name" placeholder="New channel name..." autocomplete="off">
+                    <button id="create-channel-btn" class="admin-action-btn secondary" style="padding: 10px 15px;">Add</button>
+                </div>
+                <p class="modal-subtext">Note: You can also click the trash icon next to channels in the sidebar to delete them.</p>
             </div>
 
-            <button id="close-modal-btn" class="modal-close-btn">Done</button>
+            <!-- Slowmode Configuration -->
+            <div class="admin-section-box">
+                <label>Manage Slowmode (Current Channel)</label>
+                <div class="row-group">
+                    <input type="number" id="slowmode-seconds-input" placeholder="Seconds (0 to disable)" min="0">
+                    <button id="set-slowmode-btn" class="admin-action-btn secondary" style="padding: 10px 15px;">Set</button>
+                </div>
+            </div>
+
+            <!-- Clear Channel History -->
+            <div class="admin-section-box">
+                <label>Danger Zone</label>
+                <button id="clear-channel-chat-btn" class="admin-action-btn">Clear Current Channel History</button>
+            </div>
+
+            <button id="close-admin-modal-btn" class="modal-close-btn">Close Panel</button>
         </div>
     </div>
 
@@ -661,7 +793,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const messagesRef = ref(db, 'messages');
 
         const authContainer = document.getElementById('auth-container');
         const chatContainer = document.getElementById('chat-container');
@@ -679,20 +810,35 @@
         const messageInput = document.getElementById('message-input');
         const chatWindow = document.getElementById('chat-window');
         const onlineUsersList = document.getElementById('online-users-list');
+        const channelsList = document.getElementById('channels-list');
         const footerUsername = document.getElementById('footer-username');
+        const slowmodeNotice = document.getElementById('slowmode-notice');
 
         // Settings & Admin Elements
         const gearSettingsBtn = document.getElementById('gear-settings-btn');
         const settingsBackdrop = document.getElementById('settings-backdrop');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const themeSelect = document.getElementById('theme-select');
-        const adminPanelSection = document.getElementById('admin-panel-section');
-        const clearAllChatBtn = document.getElementById('clear-all-chat-btn');
+
+        const adminPanelToggleBtn = document.getElementById('admin-panel-toggle-btn');
+        const adminModalBackdrop = document.getElementById('admin-modal-backdrop');
+        const closeAdminModalBtn = document.getElementById('close-admin-modal-btn');
+        const newChannelNameInput = document.getElementById('new-channel-name');
+        const createChannelBtn = document.getElementById('create-channel-btn');
+        const slowmodeSecondsInput = document.getElementById('slowmode-seconds-input');
+        const setSlowmodeBtn = document.getElementById('set-slowmode-btn');
+        const clearChannelChatBtn = document.getElementById('clear-channel-chat-btn');
 
         let isCreatingAccount = false;
         let activeUserRef = null;
         let isAdmin = false;
         const ADMIN_PASSWORD = 'A082613t1';
+
+        let currentChannel = 'general';
+        let currentChannelMessagesRef = ref(db, `channels/${currentChannel}/messages`);
+        let currentChannelSlowmodeRef = ref(db, `channels/${currentChannel}/slowmode`);
+        let lastMessageTimestamp = 0;
+        let slowmodeSeconds = 0;
 
         // Load saved theme
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -727,6 +873,20 @@
         settingsBackdrop.addEventListener('click', (e) => {
             if (e.target === settingsBackdrop) {
                 settingsBackdrop.classList.remove('active');
+            }
+        });
+
+        adminPanelToggleBtn.addEventListener('click', () => {
+            adminModalBackdrop.classList.add('active');
+        });
+
+        closeAdminModalBtn.addEventListener('click', () => {
+            adminModalBackdrop.classList.remove('active');
+        });
+
+        adminModalBackdrop.addEventListener('click', (e) => {
+            if (e.target === adminModalBackdrop) {
+                adminModalBackdrop.classList.remove('active');
             }
         });
 
@@ -795,7 +955,7 @@
             sessionStorage.removeItem('chat_username');
             isAdmin = false;
             adminBadge.style.display = 'none';
-            adminPanelSection.style.display = 'none';
+            adminPanelToggleBtn.style.display = 'none';
             authContainer.style.display = 'flex';
             chatContainer.style.display = 'none';
             chatWindow.innerHTML = '';
@@ -806,7 +966,6 @@
         function showChatScreen(username) {
             authContainer.style.display = 'none';
             chatContainer.style.display = 'flex';
-            roomTitle.innerText = `Chat Room (${username})`;
             footerUsername.innerText = username;
 
             activeUserRef = ref(db, `online_users/${username}`);
@@ -823,6 +982,100 @@
                 }
             });
 
+            // Initialize default general channel if missing
+            get(child(ref(db), 'channels/general')).then((snapshot) => {
+                if (!snapshot.exists()) {
+                    set(ref(db, 'channels/general'), { slowmode: 0 });
+                }
+            });
+
+            loadChannels();
+            loadOnlineUsers(username);
+            switchChannel('general');
+        }
+
+        function loadChannels() {
+            onValue(ref(db, 'channels'), (snapshot) => {
+                channelsList.innerHTML = '';
+                if (!snapshot.exists()) return;
+
+                snapshot.forEach((childSnapshot) => {
+                    const channelName = childSnapshot.key;
+                    const li = document.createElement('li');
+                    li.innerText = `#${channelName}`;
+                    if (channelName === currentChannel) {
+                        li.classList.add('active');
+                    }
+
+                    li.onclick = () => {
+                        switchChannel(channelName);
+                    };
+
+                    // If admin, append a delete channel button (except for general if desired, or let them delete any)
+                    if (isAdmin && channelName !== 'general') {
+                        const delChanBtn = document.createElement('button');
+                        delChanBtn.className = 'kick-btn';
+                        delChanBtn.innerText = 'x';
+                        delChanBtn.style.marginLeft = '10px';
+                        delChanBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            if (confirm(`Are you sure you want to delete channel #${channelName}?`)) {
+                                remove(ref(db, `channels/${channelName}`));
+                                if (currentChannel === channelName) {
+                                    switchChannel('general');
+                                }
+                            }
+                        };
+                        li.appendChild(delChanBtn);
+                    }
+
+                    channelsList.appendChild(li);
+                });
+            });
+        }
+
+        function switchChannel(channelName) {
+            currentChannel = channelName;
+            roomTitle.innerText = `#${channelName}`;
+            chatWindow.innerHTML = '';
+
+            // Update active state in UI list
+            const items = channelsList.querySelectorAll('li');
+            items.forEach(item => {
+                if (item.innerText === `#${channelName}`) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            currentChannelMessagesRef = ref(db, `channels/${channelName}/messages`);
+            currentChannelSlowmodeRef = ref(db, `channels/${channelName}/slowmode`);
+
+            // Listen to slowmode changes for this channel
+            onValue(currentChannelSlowmodeRef, (snapshot) => {
+                slowmodeSeconds = snapshot.val() || 0;
+                slowmodeSecondsInput.value = slowmodeSeconds;
+                if (slowmodeSeconds > 0) {
+                    slowmodeNotice.style.display = 'block';
+                    slowmodeNotice.innerText = `Slowmode is active: Please wait ${slowmodeSeconds}s between messages.`;
+                } else {
+                    slowmodeNotice.style.display = 'none';
+                }
+            });
+
+            // Load existing messages and listen for new ones
+            onValue(currentChannelMessagesRef, (snapshot) => {
+                chatWindow.innerHTML = '';
+                if (!snapshot.exists()) return;
+
+                snapshot.forEach((childSnapshot) => {
+                    appendMessageToDOM(childSnapshot.key, childSnapshot.val());
+                });
+            });
+        }
+
+        function loadOnlineUsers(username) {
             onValue(ref(db, 'online_users'), (snapshot) => {
                 onlineUsersList.innerHTML = '';
                 snapshot.forEach((childSnapshot) => {
@@ -834,7 +1087,6 @@
                     leftGroup.innerHTML = `<span class="status-dot"></span> ${escapeHtml(userName)}`;
                     li.appendChild(leftGroup);
 
-                    // If current user is admin and the listed user isn't themself, show Kick button
                     if (isAdmin && userName !== username) {
                         const kickBtn = document.createElement('button');
                         kickBtn.className = 'kick-btn';
@@ -862,16 +1114,30 @@
                 if (passwordAttempt === ADMIN_PASSWORD) {
                     isAdmin = true;
                     adminBadge.style.display = 'inline-block';
-                    adminPanelSection.style.display = 'flex';
-                    alert('Admin privileges granted successfully!');
+                    adminPanelToggleBtn.style.display = 'block';
+                    loadChannels(); // Reload channels to show delete buttons if applicable
+                    loadOnlineUsers(sessionStorage.getItem('chat_username'));
+                    alert('Admin privileges granted successfully! Click the shield icon in the bottom left to open the Admin Panel.');
                 } else {
                     alert('Incorrect admin password.');
                 }
                 messageInput.value = '';
-                return;
+                return; // Suppress message from being sent to chat
             }
 
-            push(messagesRef, {
+            // Check slowmode enforcement for non-admin users
+            if (slowmodeSeconds > 0 && !isAdmin) {
+                const now = Date.now();
+                const elapsedSeconds = (now - lastMessageTimestamp) / 1000;
+                if (elapsedSeconds < slowmodeSeconds) {
+                    const remaining = Math.ceil(slowmodeSeconds - elapsedSeconds);
+                    alert(`Slowmode active. Please wait ${remaining} more seconds before sending another message.`);
+                    return;
+                }
+                lastMessageTimestamp = now;
+            }
+
+            push(currentChannelMessagesRef, {
                 text: messageText,
                 sender: sessionStorage.getItem('chat_username'),
                 timestamp: Date.now()
@@ -879,27 +1145,44 @@
             messageInput.value = '';
         });
 
-        // Admin action: Clear all messages
-        clearAllChatBtn.addEventListener('click', () => {
+        // Admin actions from modal
+        createChannelBtn.addEventListener('click', () => {
+            if (!isAdmin) return;
+            const chanName = newChannelNameInput.value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+            if (!chanName) {
+                alert('Please enter a valid channel name (letters, numbers, hyphens only).');
+                return;
+            }
+            set(ref(db, `channels/${chanName}`), { slowmode: 0 }).then(() => {
+                newChannelNameInput.value = '';
+                switchChannel(chanName);
+                adminModalBackdrop.classList.remove('active');
+            });
+        });
+
+        setSlowmodeBtn.addEventListener('click', () => {
+            if (!isAdmin) return;
+            const secs = parseInt(slowmodeSecondsInput.value);
+            if (isNaN(secs) || secs < 0) {
+                alert('Please enter a valid number of seconds.');
+                return;
+            }
+            set(currentChannelSlowmodeRef, secs).then(() => {
+                alert(`Slowmode for #${currentChannel} set to ${secs} seconds.`);
+            });
+        });
+
+        clearChannelChatBtn.addEventListener('click', () => {
             if (isAdmin) {
-                if (confirm('Are you sure you want to delete all chat history?')) {
-                    remove(messagesRef);
-                    settingsBackdrop.classList.remove('active');
+                if (confirm(`Are you sure you want to clear all chat history in #${currentChannel}?`)) {
+                    remove(currentChannelMessagesRef);
+                    adminModalBackdrop.classList.remove('active');
                 }
             }
         });
 
-        // Listen for complete clearing of chat history
-        onValue(messagesRef, (snapshot) => {
-            if (!snapshot.exists()) {
-                chatWindow.innerHTML = '';
-            }
-        });
-
-        onChildAdded(messagesRef, (snapshot) => {
-            const data = snapshot.val();
+        function appendMessageToDOM(messageId, data) {
             if (!data) return;
-            const messageId = snapshot.key;
             const loggedInUser = sessionStorage.getItem('chat_username');
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
@@ -931,16 +1214,16 @@
 
             chatWindow.appendChild(messageDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-        });
+        }
 
         // Global function for admin message deletion
         window.deleteMessage = function(id) {
             if (isAdmin) {
-                remove(ref(db, `messages/${id}`));
+                remove(ref(db, `channels/${currentChannel}/messages/${id}`));
             }
         };
 
-        onChildRemoved(messagesRef, (snapshot) => {
+        onChildRemoved(currentChannelMessagesRef, (snapshot) => {
             const deletedId = snapshot.key;
             const el = chatWindow.querySelector(`[data-id="${deletedId}"]`);
             if (el) el.remove();
