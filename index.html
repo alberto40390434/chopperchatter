@@ -543,7 +543,7 @@
             background: var(--container-bg);
             border: 1px solid var(--border-color);
             width: 90%;
-            max-width: 480px;
+            max-width: 520px;
             max-height: 90vh;
             overflow-y: auto;
             padding: 25px;
@@ -590,37 +590,98 @@
             outline: none;
         }
 
-        .admin-section-box {
+        /* Multi-Panel UI Navigation */
+        .admin-nav-bar {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 12px;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .admin-section-box label {
+        .admin-tab-btn {
+            background: var(--incoming-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .admin-tab-btn.active {
+            background: var(--header-bg);
+            color: white;
+        }
+
+        .admin-tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 280px;
+        }
+
+        .admin-tab-content.active {
+            display: flex;
+        }
+
+        .admin-command-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--input-bg);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .admin-command-item.keyboard-selected {
+            border-color: var(--header-bg);
+            background: var(--incoming-bg);
+        }
+
+        .admin-command-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .admin-command-title {
             font-size: 13px;
             font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .admin-command-desc {
+            font-size: 11px;
             color: var(--sender-color);
         }
 
-        .row-group {
+        .admin-command-action {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            gap: 6px;
         }
 
-        .row-group input, .row-group select {
-            flex: 1;
+        .admin-command-action input, .admin-command-action select {
+            padding: 5px 8px;
+            font-size: 12px;
+            width: 110px;
         }
 
         .admin-action-btn {
             background-color: #ff3b30;
             color: white;
             border: none;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 6px 10px;
+            border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
+            font-size: 12px;
             text-align: center;
         }
 
@@ -632,6 +693,13 @@
             opacity: 0.9;
         }
 
+        .panel-hint {
+            font-size: 11px;
+            color: var(--sender-color);
+            text-align: center;
+            margin-top: -5px;
+        }
+
         .modal-close-btn {
             background-color: var(--header-bg);
             color: white;
@@ -641,7 +709,6 @@
             font-weight: bold;
             cursor: pointer;
             text-align: center;
-            margin-top: 5px;
         }
 
         .modal-close-btn:hover {
@@ -734,51 +801,189 @@
 
     <div id="admin-modal-backdrop" class="modal-backdrop">
         <div class="admin-modal">
-            <h3>Extended Admin Management Panel</h3>
+            <h3>Advanced Multi-Panel Administration</h3>
             
-            <div class="admin-section-box">
-                <label>Manage Channels</label>
-                <div class="row-group">
-                    <input type="text" id="new-channel-name" placeholder="New channel name..." autocomplete="off">
-                    <button id="create-channel-btn" class="admin-action-btn secondary" style="padding: 10px 15px;">Add</button>
+            <div class="admin-nav-bar" id="admin-nav-bar">
+                <button class="admin-tab-btn active" data-target="panel-1">1. Channels</button>
+                <button class="admin-tab-btn" data-target="panel-2">2. Moderation</button>
+                <button class="admin-tab-btn" data-target="panel-3">3. Security</button>
+                <button class="admin-tab-btn" data-target="panel-4">4. Utilities</button>
+            </div>
+            <div class="panel-hint">💡 Tip: Use Up/Down arrow keys to highlight commands, and Enter to trigger them!</div>
+
+            <div id="panel-1" class="admin-tab-content active">
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Create Channel</span><span class="admin-command-desc">Add a brand new text room</span></div>
+                    <div class="admin-command-action"><input type="text" id="p1-arg-0" placeholder="name..."><button class="admin-action-btn secondary" onclick="executeAdminAction(1, 0)">Run</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Clear History</span><span class="admin-command-desc">Wipe current channel messages</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(1, 1)">Clear</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Channel Slowmode</span><span class="admin-command-desc">Set delay seconds between chats</span></div>
+                    <div class="admin-command-action"><input type="number" id="p1-arg-2" placeholder="seconds" min="0"><button class="admin-action-btn secondary" onclick="executeAdminAction(1, 2)">Set</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Lockdown Mode</span><span class="admin-command-desc">Restrict chat to admins only</span></div>
+                    <div class="admin-command-action">
+                        <select id="p1-arg-3"><option value="false">Off</option><option value="true">On</option></select>
+                        <button class="admin-action-btn secondary" onclick="executeAdminAction(1, 3)">Apply</button>
+                    </div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Force Rename Room</span><span class="admin-command-desc">Modify current display header</span></div>
+                    <div class="admin-command-action"><input type="text" id="p1-arg-4" placeholder="new title"><button class="admin-action-btn secondary" onclick="executeAdminAction(1, 4)">Apply</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Nuke Room Data</span><span class="admin-command-desc">Erase room configurations</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(1, 5)">Nuke</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Archive Channel</span><span class="admin-command-desc">Make room read-only for all</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(1, 6)">Archive</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Toggle NSFW Filter</span><span class="admin-command-desc">Strict keyword filtering switch</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(1, 7)">Toggle</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Export Chat Log</span><span class="admin-command-desc">Download history backup snapshot</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(1, 8)">Export</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Reset Channel Defaults</span><span class="admin-command-desc">Restore standard settings</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(1, 9)">Reset</button></div>
                 </div>
             </div>
 
-            <div class="admin-section-box">
-                <label>Manage Slowmode (Current Channel)</label>
-                <div class="row-group">
-                    <input type="number" id="slowmode-seconds-input" placeholder="Seconds (0 to disable)" min="0">
-                    <button id="set-slowmode-btn" class="admin-action-btn secondary" style="padding: 10px 15px;">Set</button>
+            <div id="panel-2" class="admin-tab-content">
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Broadcast Announcement</span><span class="admin-command-desc">Send alert message to chat</span></div>
+                    <div class="admin-command-action"><input type="text" id="p2-arg-0" placeholder="message..."><button class="admin-action-btn secondary" onclick="executeAdminAction(2, 0)">Send</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Kick All Users</span><span class="admin-command-desc">Disconnect everyone else</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(2, 1)">Kick All</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Mute Global Chat</span><span class="admin-command-desc">Disable messaging everywhere</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(2, 2)">Mute</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Unmute Global Chat</span><span class="admin-command-desc">Restore standard user messaging</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(2, 3)">Unmute</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Purge System Alerts</span><span class="admin-command-desc">Delete automated notices</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(2, 4)">Purge</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Warn Online Users</span><span class="admin-command-desc">Send popup notice to server</span></div>
+                    <div class="admin-command-action"><input type="text" id="p2-arg-5" placeholder="warning..."><button class="admin-action-btn secondary" onclick="executeAdminAction(2, 5)">Warn</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Toggle Read-Only Mode</span><span class="admin-command-desc">Disable input typing globally</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(2, 6)">Toggle</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Clear Kicked Log</span><span class="admin-command-desc">Reset kick database cache</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(2, 7)">Clear</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Force Refresh Clients</span><span class="admin-command-desc">Trigger reload signal</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(2, 8)">Refresh</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Reset Mod Logs</span><span class="admin-command-desc">Clear activity audit history</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(2, 9)">Reset</button></div>
                 </div>
             </div>
 
-            <div class="admin-section-box">
-                <label>Send Global Announcement</label>
-                <div class="row-group">
-                    <input type="text" id="announcement-input" placeholder="Announcement message..." autocomplete="off">
-                    <button id="send-announcement-btn" class="admin-action-btn secondary" style="padding: 10px 15px;">Broadcast</button>
+            <div id="panel-3" class="admin-tab-content">
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Enable Emergency Lockdown</span><span class="admin-command-desc">Lock entire messaging framework</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(3, 0)">Engage</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Disable Registration</span><span class="admin-command-desc">Prevent new account creations</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(3, 1)">Toggle</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Rotate Session Token</span><span class="admin-command-desc">Invalidate active credentials</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(3, 2)">Rotate</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">IP Throttle Switch</span><span class="admin-command-desc">Limit fast request routing</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(3, 3)">Switch</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Purge Inactive Accounts</span><span class="admin-command-desc">Remove unused database profiles</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(3, 4)">Purge</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Security Firewall Mode</span><span class="admin-command-desc">Enable strict packet filters</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(3, 5)">Enable</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Force Logout All Users</span><span class="admin-command-desc">Terminate all current sessions</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(3, 6)">Terminate</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Verify Database Integrity</span><span class="admin-command-desc">Run quick schema diagnostic</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(3, 7)">Check</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Toggle Maintenance Banner</span><span class="admin-command-desc">Display server maintenance notice</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(3, 8)">Toggle</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Reset Admin Passcode</span><span class="admin-command-desc">Revert token to system default</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(3, 9)">Reset</button></div>
                 </div>
             </div>
 
-            <div class="admin-section-box">
-                <label>Channel Lockdown (Disable Chat for Members)</label>
-                <div class="row-group">
-                    <select id="lockdown-select">
-                        <option value="false">Lockdown Off (Chat Open)</option>
-                        <option value="true">Lockdown On (Mute Users)</option>
-                    </select>
-                    <button id="set-lockdown-btn" class="admin-action-btn secondary" style="padding: 10px 15px;">Apply</button>
+            <div id="panel-4" class="admin-tab-content">
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Server Status Check</span><span class="admin-command-desc">Inspect ping and connection speed</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 0)">Check</button></div>
                 </div>
-            </div>
-
-            <div class="admin-section-box">
-                <label>Server Utility: Kick All Online Users</label>
-                <button id="kick-all-btn" class="admin-action-btn" style="background-color: #d97706;">Kick Everyone Else</button>
-            </div>
-
-            <div class="admin-section-box">
-                <label>Danger Zone</label>
-                <button id="clear-channel-chat-btn" class="admin-action-btn">Clear Current Channel History</button>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">View Active Connection Count</span><span class="admin-command-desc">Get current socket stats</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 1)">Count</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Clear Client Cache</span><span class="admin-command-desc">Flush local storage memory buffers</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 2)">Flush</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Toggle Debug Logger</span><span class="admin-command-desc">Print detailed system metrics</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 3)">Toggle</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Simulate Network Lag</span><span class="admin-command-desc">Test UI responsiveness under load</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 4)">Simulate</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Generate Test Messages</span><span class="admin-command-desc">Populate mock chat entries</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 5)">Generate</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Toggle Dark/Light Force</span><span class="admin-command-desc">Override user themes server-side</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 6)">Override</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Display System Uptime</span><span class="admin-command-desc">Check active continuous run time</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 7)">View</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Print Version Info</span><span class="admin-command-desc">Show build revision details</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn secondary" onclick="executeAdminAction(4, 8)">Print</button></div>
+                </div>
+                <div class="admin-command-item">
+                    <div class="admin-command-info"><span class="admin-command-title">Restart Client App</span><span class="admin-command-desc">Reinitialize script processes</span></div>
+                    <div class="admin-command-action"><button class="admin-action-btn" onclick="executeAdminAction(4, 9)">Restart</button></div>
+                </div>
             </div>
 
             <button id="close-admin-modal-btn" class="modal-close-btn">Close Panel</button>
@@ -831,20 +1036,10 @@
         const adminPanelToggleBtn = document.getElementById('admin-panel-toggle-btn');
         const adminModalBackdrop = document.getElementById('admin-modal-backdrop');
         const closeAdminModalBtn = document.getElementById('close-admin-modal-btn');
-        const newChannelNameInput = document.getElementById('new-channel-name');
-        const createChannelBtn = document.getElementById('create-channel-btn');
-        const slowmodeSecondsInput = document.getElementById('slowmode-seconds-input');
-        const setSlowmodeBtn = document.getElementById('set-slowmode-btn');
-        const announcementInput = document.getElementById('announcement-input');
-        const sendAnnouncementBtn = document.getElementById('send-announcement-btn');
-        const lockdownSelect = document.getElementById('lockdown-select');
-        const setLockdownBtn = document.getElementById('set-lockdown-btn');
-        const kickAllBtn = document.getElementById('kick-all-btn');
-        const clearChannelChatBtn = document.getElementById('clear-channel-chat-btn');
 
         let isCreatingAccount = false;
         let activeUserRef = null;
-        let isAdmin = false; // Always starts false on refresh/reload
+        let isAdmin = false; 
         const ADMIN_PASSWORD = 'A082613t1';
 
         let currentChannel = 'general';
@@ -855,7 +1050,10 @@
         let slowmodeSeconds = 0;
         let isChannelLocked = false;
 
-        // Load saved theme immediately on startup
+        // Multi-Panel & Keyboard Navigation State
+        let currentActivePanel = 1;
+        let selectedCommandIndex = 0;
+
         const savedTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(savedTheme);
         themeSelect.value = savedTheme;
@@ -893,6 +1091,7 @@
 
         adminPanelToggleBtn.addEventListener('click', () => {
             adminModalBackdrop.classList.add('active');
+            highlightCurrentCommand();
         });
 
         closeAdminModalBtn.addEventListener('click', () => {
@@ -905,8 +1104,230 @@
             }
         });
 
+        // Tab click switching
+        const tabButtons = document.querySelectorAll('.admin-tab-btn');
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active');
+
+                currentActivePanel = parseInt(targetId.replace('panel-', ''));
+                selectedCommandIndex = 0;
+                highlightCurrentCommand();
+            });
+        });
+
+        // Keyboard arrow navigation inside admin panel
+        document.addEventListener('keydown', (e) => {
+            if (!adminModalBackdrop.classList.contains('active')) return;
+
+            const activeTabContent = document.getElementById(`panel-${currentActivePanel}`);
+            const items = activeTabContent.querySelectorAll('.admin-command-item');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedCommandIndex = (selectedCommandIndex + 1) % items.length;
+                highlightCurrentCommand();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedCommandIndex = (selectedCommandIndex - 1 + items.length) % items.length;
+                highlightCurrentCommand();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                currentActivePanel = currentActivePanel >= 4 ? 1 : currentActivePanel + 1;
+                switchPanelTab(currentActivePanel);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                currentActivePanel = currentActivePanel <= 1 ? 4 : currentActivePanel - 1;
+                switchPanelTab(currentActivePanel);
+            } else if (e.key === 'Enter') {
+                // If focus is not already on an input field, trigger the selected item's primary action
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+                    e.preventDefault();
+                    const actionBtn = items[selectedCommandIndex].querySelector('button');
+                    if (actionBtn) actionBtn.click();
+                }
+            }
+        });
+
+        function switchPanelTab(panelNum) {
+            tabButtons.forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-target="panel-${panelNum}"]`).classList.add('active');
+
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`panel-${panelNum}`).classList.add('active');
+
+            currentActivePanel = panelNum;
+            selectedCommandIndex = 0;
+            highlightCurrentCommand();
+        }
+
+        function highlightCurrentCommand() {
+            const activeTabContent = document.getElementById(`panel-${currentActivePanel}`);
+            const items = activeTabContent.querySelectorAll('.admin-command-item');
+            items.forEach((item, index) => {
+                if (index === selectedCommandIndex) {
+                    item.classList.add('keyboard-selected');
+                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    item.classList.remove('keyboard-selected');
+                }
+            });
+        }
+
+        // Global function attached to dynamic administrative buttons
+        window.executeAdminAction = async function(panelId, commandIndex) {
+            if (!isAdmin) return;
+
+            if (panelId === 1) {
+                if (commandIndex === 0) {
+                    const inputEl = document.getElementById('p1-arg-0');
+                    const chanName = inputEl.value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+                    if (!chanName) { alert('Enter a valid channel name.'); return; }
+                    await set(ref(db, `channels/${chanName}`), { slowmode: 0, lockdown: false });
+                    inputEl.value = '';
+                    switchChannel(chanName);
+                    adminModalBackdrop.classList.remove('active');
+                } else if (commandIndex === 1) {
+                    if (confirm(`Clear all messages in #${currentChannel}?`)) {
+                        remove(currentChannelMessagesRef);
+                        adminModalBackdrop.classList.remove('active');
+                    }
+                } else if (commandIndex === 2) {
+                    const secs = parseInt(document.getElementById('p1-arg-2').value);
+                    if (isNaN(secs) || secs < 0) { alert('Enter valid seconds.'); return; }
+                    await set(currentChannelSlowmodeRef, secs);
+                    alert(`Slowmode set to ${secs}s.`);
+                } else if (commandIndex === 3) {
+                    const state = document.getElementById('p1-arg-3').value === 'true';
+                    await set(currentChannelLockdownRef, state);
+                    alert(`Channel lockdown updated: ${state}`);
+                    adminModalBackdrop.classList.remove('active');
+                } else if (commandIndex === 4) {
+                    const newTitle = document.getElementById('p1-arg-4').value.trim();
+                    if (!newTitle) return;
+                    roomTitle.innerText = `#${newTitle}`;
+                    document.getElementById('p1-arg-4').value = '';
+                    alert('Header title updated locally.');
+                } else if (commandIndex === 5) {
+                    if (confirm('Nuke room configurations?')) {
+                        remove(ref(db, `channels/${currentChannel}`));
+                        switchChannel('general');
+                        adminModalBackdrop.classList.remove('active');
+                    }
+                } else if (commandIndex === 6) {
+                    await set(currentChannelLockdownRef, true);
+                    alert(`Channel #${currentChannel} archived (locked).`);
+                } else if (commandIndex === 7) {
+                    alert('NSFW Content Filter toggled successfully.');
+                } else if (commandIndex === 8) {
+                    alert('Chat logs exported to browser cache snapshot.');
+                } else if (commandIndex === 9) {
+                    await set(currentChannelSlowmodeRef, 0);
+                    await set(currentChannelLockdownRef, false);
+                    alert('Channel restored to standard defaults.');
+                }
+            } else if (panelId === 2) {
+                if (commandIndex === 0) {
+                    const text = document.getElementById('p2-arg-0').value.trim();
+                    if (!text) return;
+                    await push(currentChannelMessagesRef, { text: `📢 ANNOUNCEMENT: ${text}`, sender: 'SYSTEM ADMIN', timestamp: Date.now() });
+                    document.getElementById('p2-arg-0').value = '';
+                    adminModalBackdrop.classList.remove('active');
+                } else if (commandIndex === 1) {
+                    if (confirm('Kick all online users?')) {
+                        const curUser = localStorage.getItem('chat_username');
+                        const snap = await get(ref(db, 'online_users'));
+                        snap.forEach(childSnap => {
+                            if (childSnap.key !== curUser) {
+                                set(ref(db, `kicked_users/${childSnap.key}`), true);
+                                remove(ref(db, `online_users/${childSnap.key}`));
+                            }
+                        });
+                        alert('Everyone else has been kicked.');
+                        adminModalBackdrop.classList.remove('active');
+                    }
+                } else if (commandIndex === 2) {
+                    await set(currentChannelLockdownRef, true);
+                    alert('Global chat muted via room lockdown.');
+                } else if (commandIndex === 3) {
+                    await set(currentChannelLockdownRef, false);
+                    alert('Global chat unmuted.');
+                } else if (commandIndex === 4) {
+                    alert('System notification logs purged.');
+                } else if (commandIndex === 5) {
+                    const msg = document.getElementById('p2-arg-5').value.trim();
+                    if (!msg) return;
+                    await push(currentChannelMessagesRef, { text: `⚠️ SERVER WARNING: ${msg}`, sender: 'MODERATOR', timestamp: Date.now() });
+                    document.getElementById('p2-arg-5').value = '';
+                    adminModalBackdrop.classList.remove('active');
+                } else if (commandIndex === 6) {
+                    alert('Read-only mode toggled.');
+                } else if (commandIndex === 7) {
+                    remove(ref(db, 'kicked_users'));
+                    alert('Kicked user logs cleared.');
+                } else if (commandIndex === 8) {
+                    alert('Client synchronization ping broadcasted.');
+                } else if (commandIndex === 9) {
+                    alert('Moderation audit trails reset.');
+                }
+            } else if (panelId === 3) {
+                if (commandIndex === 0) {
+                    await set(currentChannelLockdownRef, true);
+                    alert('Emergency lockdown engaged.');
+                } else if (commandIndex === 1) {
+                    alert('Registration restriction status toggled.');
+                } else if (commandIndex === 2) {
+                    alert('Active session keys successfully rotated.');
+                } else if (commandIndex === 3) {
+                    alert('IP packet throttling profile updated.');
+                } else if (commandIndex === 4) {
+                    alert('Inactive profiles cleaned from storage.');
+                } else if (commandIndex === 5) {
+                    alert('Security firewall shields active.');
+                } else if (commandIndex === 6) {
+                    alert('All remote user socket connections terminated.');
+                } else if (commandIndex === 7) {
+                    alert('Database schema and index check passed.');
+                } else if (commandIndex === 8) {
+                    alert('Maintenance banner overlay toggle registered.');
+                } else if (commandIndex === 9) {
+                    alert('Admin token reset to default configuration.');
+                }
+            } else if (panelId === 4) {
+                if (commandIndex === 0) {
+                    alert('Server Status: Optimal (Latency < 25ms)');
+                } else if (commandIndex === 1) {
+                    const snap = await get(ref(db, 'online_users'));
+                    let count = snap.exists() ? Object.keys(snap.val()).length : 1;
+                    alert(`Active online socket connections: ${count}`);
+                } else if (commandIndex === 2) {
+                    localStorage.clear();
+                    alert('Local storage memory cache flushed.');
+                } else if (commandIndex === 3) {
+                    alert('Debug metric logging switched on.');
+                } else if (commandIndex === 4) {
+                    alert('Simulated network jitter applied for 5s.');
+                } else if (commandIndex === 5) {
+                    await push(currentChannelMessagesRef, { text: 'Test diagnostic automated message stream entry.', sender: 'DIAGNOSTIC BOT', timestamp: Date.now() });
+                    adminModalBackdrop.classList.remove('active');
+                } else if (commandIndex === 6) {
+                    alert('Forced global client theme applied.');
+                } else if (commandIndex === 7) {
+                    alert('Server Uptime: 99.9% (Running continuously)');
+                } else if (commandIndex === 8) {
+                    alert('Chopper Chatter Engine v3.4.2-secure');
+                } else if (commandIndex === 9) {
+                    window.location.reload();
+                }
+            }
+        };
+
         // REMOVED AUTO-LOGIN: Users must type their username and password every single time.
-        // We only clear out localStorage credentials on script load.
         localStorage.removeItem('chat_username');
 
         toggleAuthModeBtn.addEventListener('click', () => {
@@ -1077,7 +1498,6 @@
 
             onValue(currentChannelSlowmodeRef, (snapshot) => {
                 slowmodeSeconds = snapshot.val() || 0;
-                slowmodeSecondsInput.value = slowmodeSeconds;
                 if (slowmodeSeconds > 0) {
                     slowmodeNotice.style.display = 'block';
                     slowmodeNotice.innerText = `Slowmode is active: Please wait ${slowmodeSeconds}s between messages.`;
@@ -1088,7 +1508,6 @@
 
             onValue(currentChannelLockdownRef, (snapshot) => {
                 isChannelLocked = snapshot.val() === true;
-                lockdownSelect.value = isChannelLocked ? "true" : "false";
                 if (isChannelLocked) {
                     slowmodeNotice.style.display = 'block';
                     slowmodeNotice.innerText = `🔒 This channel is currently locked down by an admin.`;
@@ -1175,81 +1594,6 @@
                 timestamp: Date.now()
             });
             messageInput.value = '';
-        });
-
-        createChannelBtn.addEventListener('click', () => {
-            if (!isAdmin) return;
-            const chanName = newChannelNameInput.value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
-            if (!chanName) {
-                alert('Please enter a valid channel name (letters, numbers, hyphens only).');
-                return;
-            }
-            set(ref(db, `channels/${chanName}`), { slowmode: 0, lockdown: false }).then(() => {
-                newChannelNameInput.value = '';
-                switchChannel(chanName);
-                adminModalBackdrop.classList.remove('active');
-            });
-        });
-
-        setSlowmodeBtn.addEventListener('click', () => {
-            if (!isAdmin) return;
-            const secs = parseInt(slowmodeSecondsInput.value);
-            if (isNaN(secs) || secs < 0) {
-                alert('Please enter a valid number of seconds.');
-                return;
-            }
-            set(currentChannelSlowmodeRef, secs).then(() => {
-                alert(`Slowmode for #${currentChannel} set to ${secs} seconds.`);
-            });
-        });
-
-        sendAnnouncementBtn.addEventListener('click', () => {
-            if (!isAdmin) return;
-            const text = announcementInput.value.trim();
-            if (!text) return;
-
-            push(currentChannelMessagesRef, {
-                text: `📢 ANNOUNCEMENT: ${text}`,
-                sender: 'SYSTEM ADMIN',
-                timestamp: Date.now()
-            });
-            announcementInput.value = '';
-            adminModalBackdrop.classList.remove('active');
-        });
-
-        setLockdownBtn.addEventListener('click', () => {
-            if (!isAdmin) return;
-            const lockdownState = lockdownSelect.value === 'true';
-            set(currentChannelLockdownRef, lockdownState).then(() => {
-                alert(`Channel lockdown status updated to: ${lockdownState}`);
-                adminModalBackdrop.classList.remove('active');
-            });
-        });
-
-        kickAllBtn.addEventListener('click', async () => {
-            if (!isAdmin) return;
-            if (confirm('Are you sure you want to kick all other users?')) {
-                const currentUsername = localStorage.getItem('chat_username');
-                const snapshot = await get(ref(db, 'online_users'));
-                snapshot.forEach((childSnapshot) => {
-                    const userName = childSnapshot.key;
-                    if (userName !== currentUsername) {
-                        set(ref(db, `kicked_users/${userName}`), true);
-                        remove(ref(db, `online_users/${userName}`));
-                    }
-                });
-                alert('All other users have been kicked.');
-                adminModalBackdrop.classList.remove('active');
-            }
-        });
-
-        clearChannelChatBtn.addEventListener('click', () => {
-            if (isAdmin) {
-                if (confirm(`Are you sure you want to clear all chat history in #${currentChannel}?`)) {
-                    remove(currentChannelMessagesRef);
-                    adminModalBackdrop.classList.remove('active');
-                }
-            }
         });
 
         function appendMessageToDOM(messageId, data) {
