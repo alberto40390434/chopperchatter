@@ -543,7 +543,7 @@
             background: var(--container-bg);
             border: 1px solid var(--border-color);
             width: 90%;
-            max-width: 450px;
+            max-width: 480px;
             max-height: 90vh;
             overflow-y: auto;
             padding: 25px;
@@ -553,7 +553,7 @@
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
 
         .modal-backdrop.active .settings-modal,
@@ -593,9 +593,9 @@
         .admin-section-box {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             border-top: 1px solid var(--border-color);
-            padding-top: 15px;
+            padding-top: 12px;
         }
 
         .admin-section-box label {
@@ -641,15 +641,11 @@
             font-weight: bold;
             cursor: pointer;
             text-align: center;
+            margin-top: 5px;
         }
 
         .modal-close-btn:hover {
             opacity: 0.9;
-        }
-
-        .modal-subtext {
-            font-size: 12px;
-            color: var(--sender-color);
         }
     </style>
 </head>
@@ -712,7 +708,7 @@
             <div id="slowmode-notice" class="slowmode-notice">Slowmode is active. Please wait before sending another message.</div>
 
             <form id="chat-form" class="chat-form">
-                <input type="text" id="message-input" placeholder="Type a message or /admin [password]" autocomplete="off" required>
+                <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
                 <button type="submit">Send</button>
             </form>
         </div>
@@ -773,6 +769,11 @@
                     </select>
                     <button id="set-lockdown-btn" class="admin-action-btn secondary" style="padding: 10px 15px;">Apply</button>
                 </div>
+            </div>
+
+            <div class="admin-section-box">
+                <label>Server Utility: Kick All Online Users</label>
+                <button id="kick-all-btn" class="admin-action-btn" style="background-color: #d97706;">Kick Everyone Else</button>
             </div>
 
             <div class="admin-section-box">
@@ -838,11 +839,12 @@
         const sendAnnouncementBtn = document.getElementById('send-announcement-btn');
         const lockdownSelect = document.getElementById('lockdown-select');
         const setLockdownBtn = document.getElementById('set-lockdown-btn');
+        const kickAllBtn = document.getElementById('kick-all-btn');
         const clearChannelChatBtn = document.getElementById('clear-channel-chat-btn');
 
         let isCreatingAccount = false;
         let activeUserRef = null;
-        let isAdmin = false; // Starts false on every reload/update session
+        let isAdmin = false; // Always starts false on refresh/reload
         const ADMIN_PASSWORD = 'A082613t1';
 
         let currentChannel = 'general';
@@ -903,11 +905,9 @@
             }
         });
 
-        // Username session persists, but admin status clears on refresh/reload
-        let currentUser = localStorage.getItem('chat_username');
-        if (currentUser) {
-            showChatScreen(currentUser);
-        }
+        // REMOVED AUTO-LOGIN: Users must type their username and password every single time.
+        // We only clear out localStorage credentials on script load.
+        localStorage.removeItem('chat_username');
 
         toggleAuthModeBtn.addEventListener('click', () => {
             isCreatingAccount = !isCreatingAccount;
@@ -982,7 +982,6 @@
             chatContainer.style.display = 'flex';
             footerUsername.innerText = username;
 
-            // Update UI based on current session's admin state
             updateAdminUI();
 
             activeUserRef = ref(db, `online_users/${username}`);
@@ -1145,7 +1144,7 @@
                 if (enteredPassword === ADMIN_PASSWORD) {
                     isAdmin = true;
                     updateAdminUI();
-                    loadChannels(); // Refresh channel list to show delete buttons if applicable
+                    loadChannels();
                     alert('Admin access granted for this session!');
                 } else {
                     alert('Incorrect admin password!');
@@ -1225,6 +1224,23 @@
                 alert(`Channel lockdown status updated to: ${lockdownState}`);
                 adminModalBackdrop.classList.remove('active');
             });
+        });
+
+        kickAllBtn.addEventListener('click', async () => {
+            if (!isAdmin) return;
+            if (confirm('Are you sure you want to kick all other users?')) {
+                const currentUsername = localStorage.getItem('chat_username');
+                const snapshot = await get(ref(db, 'online_users'));
+                snapshot.forEach((childSnapshot) => {
+                    const userName = childSnapshot.key;
+                    if (userName !== currentUsername) {
+                        set(ref(db, `kicked_users/${userName}`), true);
+                        remove(ref(db, `online_users/${userName}`));
+                    }
+                });
+                alert('All other users have been kicked.');
+                adminModalBackdrop.classList.remove('active');
+            }
         });
 
         clearChannelChatBtn.addEventListener('click', () => {
